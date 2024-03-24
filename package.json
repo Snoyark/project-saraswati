@@ -1,24 +1,28 @@
 {
   "name": "project-saraswati",
-  "version": "1.0.0",
-  "description": "llm to help summarize research articles",
-  "main": "index.js",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx tsc",
-    "start": "node index.js",
-    "recreate": "npm run build && npm run start"
-  },
-  "repository": {
-    "type": "git",
-    "url": "\u001b[3;2~github.com/Snoyark/project-saraswati"
-  },
-  "author": "Neel Venugopal",
-  "license": "MIT",
-  "devDependencies": {
-    "typescript": "^5.4.2"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "restart": "npm run build && npm run start"
   },
   "dependencies": {
-    "ollama": "^0.5.0"
+    "react": "^18",
+    "react-dom": "^18",
+    "next": "14.1.3"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0",
+    "eslint": "^8",
+    "eslint-config-next": "14.1.3"
   }
 }
