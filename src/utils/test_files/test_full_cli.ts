@@ -1,6 +1,6 @@
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output, env } from "node:process";
-import { delay, get_document_chain, init_and_get_retriever } from "./utils";
+import { delay, get_document_chain, init_and_get_retriever } from "../utils";
 const { ChatOllama } = require("@langchain/community/chat_models/ollama");
 const ChromaClient = require("chromadb").ChromaClient;
 const { CheerioWebBaseLoader } =  require("langchain/document_loaders/web/cheerio");

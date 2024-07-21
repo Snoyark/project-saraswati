@@ -4,6 +4,7 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
 import { SimpleChatModel } from "langchain/chat_models/base";
 import { VectorStoreRetriever } from "langchain/vectorstores/base";
+import _ from "lodash";
 
 const { createStuffDocumentsChain } = require("langchain/chains/combine_documents");
 const { ChatOllama } = require("@langchain/community/chat_models/ollama");
@@ -11,7 +12,7 @@ const { ChromaClient } = require("chromadb");
 const { Chroma } = require("@langchain/community/vectorstores/chroma");
 
 
-const splitter: RecursiveCharacterTextSplitter = new RecursiveCharacterTextSplitter();
+export const splitter: RecursiveCharacterTextSplitter = new RecursiveCharacterTextSplitter();
 
 const loader: CheerioWebBaseLoader = new CheerioWebBaseLoader(
   "https://docs.smith.langchain.com/user_guide"
@@ -21,7 +22,7 @@ const neuro_loader: CheerioWebBaseLoader = new CheerioWebBaseLoader(
   "https://www.jneurosci.org/content/44/13/e1794232024"
 );
 
-const embeddings: OllamaEmbeddings = new OllamaEmbeddings({
+export const embeddings: OllamaEmbeddings = new OllamaEmbeddings({
   model: 'llama2:latest',
   maxConcurrency: 5,
 });
@@ -32,6 +33,14 @@ export const get_chat_model = (model?: string): SimpleChatModel => {
     model: model ?? "llama2:latest",
   });
 };
+
+export const get_documents_from_text = async (text: string) => {
+  const text_split = await splitter.splitText(text)
+  const text_docs = _.map(text_split, text_piece => {
+    return { pageContent: text_piece, metadata: {} }
+  })
+  return text_docs
+}
 
 export const init_and_get_retriever = async (): Promise<VectorStoreRetriever> => {
   console.log('about to wait for loader.load');
@@ -71,4 +80,9 @@ export const get_document_chain = async (prompt: ChatPromptTemplate): Promise<an
 
 export const delay = async (ms: number) => {
   return new Promise( resolve => setTimeout(resolve, ms) );
+}
+
+export function getNanoSecTime() {
+  var hrTime = process.hrtime();
+  return hrTime[0] * 1000000000 + hrTime[1];
 }

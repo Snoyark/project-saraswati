@@ -22,9 +22,9 @@ type ArxivArticle = {
   summary: string,
 }
 
-export const search = (query:string) => {
+export const search = (query:string, max_results:number = 10) => {
   // Search Query stuff: https://info.arxiv.org/help/api/user-manual.html#query_details
-  return axios.get(`${base_url}query?search_query=${query}&sortBy=submittedDate&sortOrder=descending`)
+  return axios.get(`${base_url}query?search_query=${query}&sortBy=submittedDate&sortOrder=descending&max_results=${max_results}`)
 }
 
 const process_result = (entry: any) => {
@@ -44,13 +44,14 @@ const process_result = (entry: any) => {
   } 
 }
 
-export const get_results = async (search_field: string) => {
-  const res = await search(search_field)
+export const get_results = async (search_field: string, max_results: number = 10) => {
+  const res = await search(search_field, max_results)
   const js_data = JSON.parse(xmlParser.xml2json(res.data, { compact: true, spaces: 2 }))
   const articles: ArxivArticle[] = _.map(js_data.feed.entry, entry => {
     return process_result(entry)
   })
   console.log(articles)
+  return articles
 }
 
 get_results('neuroscience')

@@ -41,3 +41,6 @@ export async function ingest_pdf_to_text(path: string): Promise<string> {
   return text
 }
 
+export async function removeFile(path: string) {
+  fs.unlinkSync(path)
+}
