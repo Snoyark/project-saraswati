@@ -44,8 +44,8 @@ const process_result = (entry: any) => {
   } 
 }
 
-const main = async () => {
-  const res = await search('neuroscience')
+export const get_results = async (search_field: string) => {
+  const res = await search(search_field)
   const js_data = JSON.parse(xmlParser.xml2json(res.data, { compact: true, spaces: 2 }))
   const articles: ArxivArticle[] = _.map(js_data.feed.entry, entry => {
     return process_result(entry)
@@ -53,4 +53,4 @@ const main = async () => {
   console.log(articles)
 }
 
-main()
+get_results('neuroscience')
