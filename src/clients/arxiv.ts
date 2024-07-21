@@ -15,6 +15,7 @@ const base_url = 'http://export.arxiv.org/api/'
 
 type ArxivArticle = {
   title: string,
+  authors: string[],
   created_on: Date,
   updated_on: Date,
   pdf_link: string,
@@ -26,18 +27,28 @@ export const search = (query:string) => {
   return axios.get(`${base_url}query?search_query=${query}&sortBy=submittedDate&sortOrder=descending`)
 }
 
+const process_result = (entry: any) => {
+  const authors = _.map(entry.author, author => {
+    if ('name' in author) {
+      return author.name._text
+    }
+    return author._text
+  })
+  return {
+    title: entry.title._text,
+    authors,
+    created_on: new Date(Date.parse(entry.published._text)),
+    updated_on: new Date(Date.parse(entry.updated._text)),
+    pdf_link: entry.id._text.replace('abs', 'pdf'),
+    summary: entry.summary._text,
+  } 
+}
+
 const main = async () => {
   const res = await search('neuroscience')
   const js_data = JSON.parse(xmlParser.xml2json(res.data, { compact: true, spaces: 2 }))
-  // console.log(js_data.feed.entry)
   const articles: ArxivArticle[] = _.map(js_data.feed.entry, entry => {
-    return {
-      title: entry.title._text,
-      created_on: new Date(Date.parse(entry.published._text)),
-      updated_on: new Date(Date.parse(entry.updated._text)),
-      pdf_link: entry.id._text.replace('abs', 'pdf'),
-      summary: entry.summary._text,
-    } 
+    return process_result(entry)
   })
   console.log(articles)
 }
