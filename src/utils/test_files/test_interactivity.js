@@ -36,62 +36,57 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ingest_pdf_to_text = exports.downloadPdf = void 0;
-var axios_1 = require("axios");
-var pdfUtil = require("pdf-ts");
-var fs = require("fs");
-// Usage
-// const pdfUrl = 'http://arxiv.org/pdf/2407.06498v1';
-// const outputPath = './download.pdf';
-// downloadPdf(pdfUrl, outputPath)
-//   .then(() => console.log('PDF downloaded successfully'))
-//   .catch((error) => console.error('Failed to download PDF:', error));
-function downloadPdf(url, outputPath) {
+var promises_1 = require("node:readline/promises");
+var node_process_1 = require("node:process");
+// import { Configuration, OpenAIApi } from "openai";
+// const configuration = new Configuration({ apiKey: env.OPENAI_API_KEY });
+// const openai = new OpenAIApi(configuration);
+var main = function () {
     return __awaiter(this, void 0, void 0, function () {
-        var response, writer_1, error_1;
+        var readline, chatbotType, messages, userInput, botMessage, error_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, (0, axios_1.default)({
-                            method: 'GET',
-                            url: url,
-                            responseType: 'stream'
-                        })];
+                    readline = (0, promises_1.createInterface)({ input: node_process_1.stdin, output: node_process_1.stdout });
+                    return [4 /*yield*/, readline.question("What type of chatbot would you like to create? ")];
                 case 1:
-                    response = _a.sent();
-                    writer_1 = fs.createWriteStream(outputPath);
-                    response.data.pipe(writer_1);
-                    return [2 /*return*/, new Promise(function (resolve, reject) {
-                            writer_1.on('finish', resolve);
-                            writer_1.on('error', reject);
-                        })];
+                    chatbotType = _a.sent();
+                    messages = [{ role: "system", content: chatbotType }];
+                    return [4 /*yield*/, readline.question("Say hello to your new assistant.\n\n")];
                 case 2:
+                    userInput = _a.sent();
+                    _a.label = 3;
+                case 3:
+                    if (!(userInput !== ".exit")) return [3 /*break*/, 12];
+                    messages.push({ role: "user", content: userInput });
+                    _a.label = 4;
+                case 4:
+                    _a.trys.push([4, 9, , 11]);
+                    botMessage = { role: 'sampleBotMessage', content: 'This is some response from the gpt' };
+                    if (!botMessage) return [3 /*break*/, 6];
+                    messages.push(botMessage);
+                    return [4 /*yield*/, readline.question("\n" + botMessage.content + "\n\n")];
+                case 5:
+                    userInput = _a.sent();
+                    return [3 /*break*/, 8];
+                case 6: return [4 /*yield*/, readline.question("\nNo response, try asking again\n")];
+                case 7:
+                    userInput = _a.sent();
+                    _a.label = 8;
+                case 8: return [3 /*break*/, 11];
+                case 9:
                     error_1 = _a.sent();
-                    console.error('Error downloading PDF:', error_1);
-                    throw error_1;
-                case 3: return [2 /*return*/];
+                    console.log(error_1);
+                    return [4 /*yield*/, readline.question("\nSomething went wrong, try asking again\n")];
+                case 10:
+                    userInput = _a.sent();
+                    return [3 /*break*/, 11];
+                case 11: return [3 /*break*/, 3];
+                case 12:
+                    readline.close();
+                    return [2 /*return*/];
             }
         });
     });
-}
-exports.downloadPdf = downloadPdf;
-function ingest_pdf_to_text(path) {
-    return __awaiter(this, void 0, void 0, function () {
-        var pdf_file, text;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, fs.readFileSync(path)];
-                case 1:
-                    pdf_file = _a.sent();
-                    return [4 /*yield*/, pdfUtil.pdfToText(pdf_file)];
-                case 2:
-                    text = _a.sent();
-                    console.log(text);
-                    return [2 /*return*/, text];
-            }
-        });
-    });
-}
-exports.ingest_pdf_to_text = ingest_pdf_to_text;
-ingest_pdf_to_text('./download.pdf');
+};
+main();

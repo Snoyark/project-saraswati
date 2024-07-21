@@ -1,6 +1,14 @@
 import axios from 'axios';
+import * as pdfUtil from 'pdf-ts'
 import * as fs from 'fs';
 
+// Usage
+// const pdfUrl = 'http://arxiv.org/pdf/2407.06498v1';
+// const outputPath = './download.pdf';
+
+// downloadPdf(pdfUrl, outputPath)
+//   .then(() => console.log('PDF downloaded successfully'))
+//   .catch((error) => console.error('Failed to download PDF:', error));
 export async function downloadPdf(url: string, outputPath: string): Promise<void> {
   try {
     // Make a GET request to the URL
@@ -25,9 +33,11 @@ export async function downloadPdf(url: string, outputPath: string): Promise<void
 }
 
 // Usage
-// const pdfUrl = 'http://arxiv.org/pdf/2407.06498v1';
-// const outputPath = './download.pdf';
+// ingest_pdf_to_text('./download.pdf')
+export async function ingest_pdf_to_text(path: string): Promise<string> {
+  const pdf_file = await fs.readFileSync(path)
+  const text = await pdfUtil.pdfToText(pdf_file)
+  console.log(text)
+  return text
+}
 
-// downloadPdf(pdfUrl, outputPath)
-//   .then(() => console.log('PDF downloaded successfully'))
-//   .catch((error) => console.error('Failed to download PDF:', error));
