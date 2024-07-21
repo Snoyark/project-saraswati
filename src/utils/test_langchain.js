@@ -11,6 +11,8 @@ const { createRetrievalChain } = require("langchain/chains/retrieval");
 const pdf_util = require('pdf-ts');
 const fs = require('node:fs/promises');
 const { Document } = require("@langchain/core/documents");
+const { createHistoryAwareRetriever } = require("langchain/chains/history_aware_retriever");
+const { MessagesPlaceholder } = require("@langchain/core/prompts");
 
 const splitter = new RecursiveCharacterTextSplitter();
 
@@ -40,21 +42,13 @@ const getChromaClient = async () => {
 }
 
 const main = async () => {
-  const pdf = await fs.readFile(test_research_papers_path);
-  const pdf_string = await pdf_util.pdfToText(pdf);
   console.log('about to wait for loader.load')
   const docs = await loader.load();
   const neuro_docs = await neuro_loader.load();
-  // console.log(docs.length);
   console.log('about to wait for the splitter to split the documents')
   const splitDocs = await splitter.splitDocuments(docs);
   const splitNeuroDocs = await splitter.splitDocuments(neuro_docs);
-  console.log(splitDocs.length);
-  // console.log('creating the in memory vector store')
-  // const vectorstore = await MemoryVectorStore.fromDocuments(
-  //   splitDocs,
-  //   embeddings,
-  // )
+
   const chroma = await getChromaClient()
   await chroma.reset()
   const collection = await chroma.createCollection({ name: "neuro" }).catch(err => {
@@ -71,7 +65,7 @@ const main = async () => {
   await vectorstore.addDocuments(splitDocs)
   await vectorstore.addDocuments(splitNeuroDocs)
   console.log('documents added')
-  // const vectorstore = await Chroma.fromDocuments(splitDocs, embeddings)
+
   const prompt =
   ChatPromptTemplate.fromTemplate(`Answer the following question based only on the provided context:
 
@@ -115,6 +109,50 @@ Question: {input}`);
     input: "Can you explain about oligodendrocyte maturation?"
   })
   console.log(result2.answer)
+
+  const historyAwareRetrievalPrompt = ChatPromptTemplate.fromMessages([
+    [
+      "system",
+      "Answer the user's questions based on the below context:\n\n{context}",
+    ],
+    new MessagesPlaceholder("chat_history"),
+    ["user", "{input}"],
+  ]);
+  
+  const historyAwareCombineDocsChain = await createStuffDocumentsChain({
+    llm: chatModel,
+    prompt: historyAwareRetrievalPrompt,
+  });
+
+  const historyAwarePrompt = ChatPromptTemplate.fromMessages([
+    new MessagesPlaceholder("chat_history"),
+    ["user", "{input}"],
+    [
+      "user",
+      "Given the above conversation, generate a search query to look up in order to get information relevant to the conversation",
+    ],
+  ]);
+
+  const historyAwareRetrieverChain = await createHistoryAwareRetriever({
+    llm: chatModel,
+    retriever,
+    rephrasePrompt: historyAwarePrompt,
+  });
+  
+  const conversationalRetrievalChain = await createRetrievalChain({
+    retriever: historyAwareRetrieverChain,
+    combineDocsChain: historyAwareCombineDocsChain,
+  });
+
+  const result3 = await conversationalRetrievalChain.invoke({
+    chat_history: [ // Need to add to the chat_history (and keep track of this) on both human and AI message
+      new HumanMessage("Can LangSmith help test my LLM applications?"),
+      new AIMessage("Yes!"),
+    ],
+    input: "tell me how",
+  });
+  
+  console.log(result3.answer);
 }
 
 main()
