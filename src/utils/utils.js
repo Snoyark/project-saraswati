@@ -37,15 +37,18 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getNanoSecTime = exports.delay = exports.get_document_chain = exports.init_and_get_retriever = exports.get_documents_from_text = exports.get_chat_model = exports.embeddings = exports.splitter = void 0;
-var cheerio_1 = require("langchain/document_loaders/web/cheerio");
+var cheerio_1 = require("@langchain/community/document_loaders/web/cheerio");
 var text_splitter_1 = require("langchain/text_splitter");
 var ollama_1 = require("@langchain/community/embeddings/ollama");
-var lodash_1 = require("lodash");
+var _ = require("lodash");
 var createStuffDocumentsChain = require("langchain/chains/combine_documents").createStuffDocumentsChain;
 var ChatOllama = require("@langchain/community/chat_models/ollama").ChatOllama;
 var ChromaClient = require("chromadb").ChromaClient;
 var Chroma = require("@langchain/community/vectorstores/chroma").Chroma;
-exports.splitter = new text_splitter_1.RecursiveCharacterTextSplitter();
+exports.splitter = new text_splitter_1.RecursiveCharacterTextSplitter({
+    chunkSize: 1000,
+    chunkOverlap: 200,
+});
 var loader = new cheerio_1.CheerioWebBaseLoader("https://docs.smith.langchain.com/user_guide");
 var neuro_loader = new cheerio_1.CheerioWebBaseLoader("https://www.jneurosci.org/content/44/13/e1794232024");
 exports.embeddings = new ollama_1.OllamaEmbeddings({
@@ -66,7 +69,7 @@ var get_documents_from_text = function (text) { return __awaiter(void 0, void 0,
             case 0: return [4 /*yield*/, exports.splitter.splitText(text)];
             case 1:
                 text_split = _a.sent();
-                text_docs = lodash_1.default.map(text_split, function (text_piece) {
+                text_docs = _.map(text_split, function (text_piece) {
                     return { pageContent: text_piece, metadata: {} };
                 });
                 return [2 /*return*/, text_docs];

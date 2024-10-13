@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as pdfUtil from 'pdf-ts'
 import * as fs from 'fs';
+import * as path from 'path';
 
 // Usage
 // const pdfUrl = 'http://arxiv.org/pdf/2407.06498v1';
@@ -16,9 +17,17 @@ export async function downloadPdf(url: string, outputPath: string): Promise<void
       method: 'GET',
       url: url,
       responseType: 'stream'
+    }).then((res) => {
+      console.log('downloaded successfully')
+      return res
+    })
+    .catch((err) => {
+      console.log(`failed to download`)
+      throw new Error('failed to download file')
     });
 
     // Pipe the response data to a file
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     const writer = fs.createWriteStream(outputPath);
     response.data.pipe(writer);
 
@@ -37,7 +46,6 @@ export async function downloadPdf(url: string, outputPath: string): Promise<void
 export async function ingest_pdf_to_text(path: string): Promise<string> {
   const pdf_file = await fs.readFileSync(path)
   const text = await pdfUtil.pdfToText(pdf_file)
-  console.log(text)
   return text
 }
 

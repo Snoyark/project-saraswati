@@ -3,7 +3,7 @@ import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
 import { SimpleChatModel } from "@langchain/core/language_models/chat_models";
-import _ from "lodash";
+import * as _ from "lodash";
 
 const { createStuffDocumentsChain } = require("langchain/chains/combine_documents");
 const { ChatOllama } = require("@langchain/community/chat_models/ollama");
@@ -11,7 +11,10 @@ const { ChromaClient } = require("chromadb");
 const { Chroma } = require("@langchain/community/vectorstores/chroma");
 
 
-export const splitter: RecursiveCharacterTextSplitter = new RecursiveCharacterTextSplitter();
+export const splitter: RecursiveCharacterTextSplitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 1000,
+  chunkOverlap: 200,
+});
 
 const loader: CheerioWebBaseLoader = new CheerioWebBaseLoader(
   "https://docs.smith.langchain.com/user_guide"
