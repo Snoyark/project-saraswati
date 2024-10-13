@@ -44,7 +44,11 @@ const log_number_of_entries = async function(topic: string, chroma: ChromaClient
 }
 
 const run = async function(topic: string, vectorstore: Chroma) {
-  const search_results = await arxiv_client.get_results(topic)
+  const search_results = await arxiv_client.get_results({
+    query: topic,
+    max_results: 100,
+  })
+  console.log(`got ${search_results.length} results`)
   
   await Bluebird.map(search_results, async result => {
     // Download the pdf

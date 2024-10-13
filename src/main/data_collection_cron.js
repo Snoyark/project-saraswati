@@ -106,9 +106,10 @@ var run = function (topic, vectorstore) {
         var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, arxiv_client.get_results(topic)];
+                case 0: return [4 /*yield*/, arxiv_client.get_results(topic, 100)];
                 case 1:
                     search_results = _a.sent();
+                    console.log("got ".concat(search_results.length, " results"));
                     return [4 /*yield*/, bluebird_1.Promise.map(search_results, function (result) { return __awaiter(_this, void 0, void 0, function () {
                             var file_path, failed, text, text_docs, summary_docs;
                             return __generator(this, function (_a) {
