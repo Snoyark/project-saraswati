@@ -1,9 +1,8 @@
-import { ChatPromptTemplate } from "langchain/prompts";
-import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
+import { ChatPromptTemplate } from "@langchain/core/prompts"
+import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
-import { SimpleChatModel } from "langchain/chat_models/base";
-import { VectorStoreRetriever } from "langchain/vectorstores/base";
+import { SimpleChatModel } from "@langchain/core/language_models/chat_models";
 import _ from "lodash";
 
 const { createStuffDocumentsChain } = require("langchain/chains/combine_documents");
@@ -42,7 +41,7 @@ export const get_documents_from_text = async (text: string) => {
   return text_docs
 }
 
-export const init_and_get_retriever = async (): Promise<VectorStoreRetriever> => {
+export const init_and_get_retriever = async (): Promise<any> => {
   console.log('about to wait for loader.load');
   const docs = await loader.load();
   const neuro_docs = await neuro_loader.load();

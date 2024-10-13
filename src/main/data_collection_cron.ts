@@ -2,7 +2,7 @@ import * as dl_utils from '../utils/download_utils'
 import * as gen_utils from '../utils/utils'
 
 import * as arxiv_client from '../clients/arxiv'
-import { ChromaClient, Collection } from 'chromadb';
+import { ChromaClient } from 'chromadb';
 import _ from 'lodash';
 import { Chroma } from '@langchain/community/vectorstores/chroma';
 // const argv = require('minimist')(process.argv.slice(2)) (from other repos)
