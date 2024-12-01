@@ -10,7 +10,7 @@
     "skipLibCheck": true,
     "strict": true,
     "outDir": "built/",
-    "rootDir": "src/",
+    "rootDir": ".",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "module": "esnext",
