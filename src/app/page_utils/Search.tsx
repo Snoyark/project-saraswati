@@ -1,126 +1,70 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react';
-import styled from 'styled-components';
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background-color: #f9fafb;
-`;
-
-const MessagesArea = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-const MessageRow = styled.div<{ isUser: boolean }>`
-  display: flex;
-  justify-content: ${props => props.isUser ? 'flex-end' : 'flex-start'};
-`;
-
-const MessageBubble = styled.div<{ isUser: boolean }>`
-  max-width: 80%;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  background-color: ${props => props.isUser ? '#3b82f6' : '#ffffff'};
-  color: ${props => props.isUser ? '#ffffff' : '#000000'};
-  border: ${props => props.isUser ? 'none' : '1px solid #e5e7eb'};
-`;
-
-const MessageText = styled.p`
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-`;
-
-const TimeStamp = styled.p`
-  font-size: 0.75rem;
-  line-height: 1rem;
-  margin-top: 0.25rem;
-  opacity: 0.7;
-`;
-
-const InputArea = styled.div`
-  border-top: 1px solid #e5e7eb;
-  background-color: #ffffff;
-  padding: 1rem;
-`;
-
-const Form = styled.form`
-  display: flex;
-  gap: 1rem;
-`;
-
-const TextArea = styled.textarea`
-  flex: 1;
-  resize: none;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  padding: 0.75rem;
-  min-height: 44px;
-  max-height: 8rem;
-  
-  &:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-  }
-`;
-
-const SendButton = styled.button<{ disabled: boolean }>`
-  background-color: #3b82f6;
-  color: white;
-  border-radius: 0.5rem;
-  padding: 0.5rem 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: ${props => props.disabled ? '#3b82f6' : '#2563eb'};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const LoadingMessage = styled.div`
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  color: #6b7280;
-`;
-
-const SendIcon = styled.svg`
-  width: 1.25rem;
-  height: 1.25rem;
-`;
+import { Container, MessagesArea, MessageRow, MessageBubble, MessageText, TimeStamp, LoadingMessage, InputArea, Form, TextArea, SendButton, SendIcon } from './styles/Search';
+import { create_retrieval_chain, RetrievalChain } from '@/utils/utils';
 
 interface Message {
   id: string;
   text: string;
   sender: 'user' | 'assistant';
   timestamp: Date;
+  isStreaming?: boolean;
 }
+
+// New component for streaming text
+const StreamingText: React.FC<{ text: string; onComplete: () => void }> = ({ text, onComplete }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timer = setTimeout(() => {
+        setDisplayedText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, 30); // Adjust speed here
+
+      return () => clearTimeout(timer);
+    } else {
+      onComplete();
+    }
+  }, [currentIndex, text, onComplete]);
+
+  return <>{displayedText}</>;
+};
 
 type SearchArgs = {
   topic_name: string;
 };
 
+// commenting this out since this is causing compilation issues on the client side
+// const get_retrieval_chain = async (
+//   topic_name: string, 
+//   setRetrievalChain: React.Dispatch<React.SetStateAction<any | undefined>>
+// ) => {
+//     const retrievalChain = await create_retrieval_chain(topic_name);
+//     setRetrievalChain(retrievalChain);
+// }
+
 const ChatInterface = (args: SearchArgs) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const initial_message: Message = {
+    id: Date.now().toString(),
+    text: `Hello there! You wanted to learn about ${args.topic_name} today - how can I help?`,
+    sender: 'assistant',
+    timestamp: new Date(),
+    isStreaming: true, // Add streaming to initial message
+  };
+
+  const [messages, setMessages] = useState<Message[]>([initial_message]);
+  const [retrievalChain, setRetrievalChain] = useState<RetrievalChain>();
   const [inputText, setInputText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // get_retrieval_chain(args.topic_name, setRetrievalChain);
+  // if (retrievalChain) {
+  //   setIsLoading(false);
+  // }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -136,6 +80,16 @@ const ChatInterface = (args: SearchArgs) => {
       inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
     }
   }, [inputText]);
+
+  const completeStreaming = (messageId: string) => {
+    setMessages(prev => 
+      prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, isStreaming: false }
+          : msg
+      )
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,6 +117,7 @@ const ChatInterface = (args: SearchArgs) => {
         text: response as string,
         sender: 'assistant',
         timestamp: new Date(),
+        isStreaming: true, // Add streaming to assistant messages
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -179,7 +134,16 @@ const ChatInterface = (args: SearchArgs) => {
         {messages.map((message) => (
           <MessageRow key={message.id} isUser={message.sender === 'user'}>
             <MessageBubble isUser={message.sender === 'user'}>
-              <MessageText>{message.text}</MessageText>
+              <MessageText>
+                {message.isStreaming ? (
+                  <StreamingText 
+                    text={message.text} 
+                    onComplete={() => completeStreaming(message.id)}
+                  />
+                ) : (
+                  message.text
+                )}
+              </MessageText>
               <TimeStamp>
                 {message.timestamp.toLocaleTimeString()}
               </TimeStamp>

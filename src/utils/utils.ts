@@ -2,13 +2,29 @@ import { ChatPromptTemplate } from "@langchain/core/prompts"
 import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
+import { createRetrievalChain } from "langchain/chains/retrieval";
 import { SimpleChatModel } from "@langchain/core/language_models/chat_models";
 import * as _ from "lodash";
+import { GENERAL_PROMPT } from "./constants";
+import { BaseMessage } from "@langchain/core/messages";
+import { Runnable } from "@langchain/core/runnables";
 
 const { createStuffDocumentsChain } = require("langchain/chains/combine_documents");
 const { ChatOllama } = require("@langchain/community/chat_models/ollama");
 const { ChromaClient } = require("chromadb");
 const { Chroma } = require("@langchain/community/vectorstores/chroma");
+
+export type RetrievalChain = Runnable<{
+  input: string;
+  chat_history?: BaseMessage[] | string;
+} & {
+  [key: string]: unknown;
+}, {
+  context: Document[];
+  answer: unknown;
+} & {
+  [key: string]: unknown;
+}>;
 
 
 export const splitter: RecursiveCharacterTextSplitter = new RecursiveCharacterTextSplitter({
@@ -82,6 +98,19 @@ export const get_document_chain = async (prompt: ChatPromptTemplate): Promise<an
 
 export const delay = async (ms: number) => {
   return new Promise( resolve => setTimeout(resolve, ms) );
+}
+
+export const create_retrieval_chain = async (topic_name: string) => {
+  const retriever = await init_and_get_retriever()
+  const prompt = ChatPromptTemplate.fromTemplate(`${GENERAL_PROMPT[0]}${topic_name}${GENERAL_PROMPT[1]}`);
+  const document_chain = await get_document_chain(prompt)
+
+  const retrievalChain = await createRetrievalChain({
+    retriever,
+    combineDocsChain: document_chain,
+  });
+
+  return retrievalChain
 }
 
 export function getNanoSecTime() {

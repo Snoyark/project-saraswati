@@ -6,15 +6,14 @@
       "esnext"
     ],
     "allowJs": true,
-    "target": "es2022",
+    "target": "esnext",
     "skipLibCheck": true,
     "strict": true,
     "outDir": "built/",
     "rootDir": ".",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
+    "module": "CommonJS",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -29,7 +28,8 @@
         "./src/*"
       ]
     },
-    "noEmit": false
+    "noEmit": false,
+    "moduleResolution": "node"
   },
   "include": [
     "src/**/*",

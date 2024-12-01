@@ -1,7 +1,10 @@
 import SearchPage from "../page_utils/Search";
+import { ArtificialIntelligenceTopic } from "../../utils/constants"
 
 export default function AISearch() {
-  return SearchPage({
-    topic_name: 'Artificial Intelligence',
-  });
+  return (
+    <div>
+      <SearchPage topic_name={ArtificialIntelligenceTopic.name} />
+    </div>
+  );
 };
