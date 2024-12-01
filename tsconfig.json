@@ -2,10 +2,11 @@
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
-    "target": "ES2023",
+    "target": "es2022",
     "skipLibCheck": true,
     "strict": true,
-    "noEmit": true,
+    "outDir": "built/",
+    "rootDir": "src/",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -23,6 +24,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/*"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*"]
 }
