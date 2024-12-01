@@ -1,13 +1,13 @@
 'use client'
 
-import { UnorderedHorizontalList, UnorderedVerticalList } from '@/pages/styles/List';
 import { SUPPORTED_TOPICS } from '@/utils/constants';
 import Link from 'next/link'
+import { UnorderedHorizontalList, UnorderedVerticalList } from './page_utils/styles/List';
 
 export default function Home() {
   return (
     <div>
-      <h1>There is no way this updates</h1>
+      <h1>Version -1.0</h1>
       <UnorderedVerticalList>
         <li>
           <Link href="/">Home</Link>
