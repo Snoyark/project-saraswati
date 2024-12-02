@@ -52,10 +52,10 @@ export const get_chat_model = (model?: string): SimpleChatModel => {
   });
 };
 
-export const get_documents_from_text = async (text: string) => {
+export const get_documents_from_text = async (text: string, metadata: any = {}) => {
   const text_split = await splitter.splitText(text)
   const text_docs = _.map(text_split, text_piece => {
-    return { pageContent: text_piece, metadata: {} }
+    return { pageContent: text_piece, metadata }
   })
   return text_docs
 }

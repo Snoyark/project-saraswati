@@ -25,7 +25,7 @@ Feed into Chroma
 */
 const init = async function(topic: string, chroma: ChromaClient) {
   // Initialize ChromaClient
-  await chroma.reset(); // Only for testing - do not have this uncommented
+  // await chroma.reset(); // Only for testing - do not have this uncommented
   const collection = await chroma.getOrCreateCollection({ name: topic }).catch((err: Error) => {
     console.log(err);
     throw err;
@@ -50,6 +50,7 @@ const run = async function(topic: string, vectorstore: Chroma) {
     max_results: 100,
   })
   console.log(`got ${search_results.length} results`)
+  console.log(JSON.stringify(search_results[0]))
   
   await Bluebird.map(search_results, async result => {
     // Download the pdf
@@ -57,21 +58,26 @@ const run = async function(topic: string, vectorstore: Chroma) {
     console.log('downloading')
     const failed = await dl_utils.downloadPdf(result.pdf_link, file_path)
       .then(() => false)
-      .catch(() => true)// error encountered, just return from this iteration and skip this file)
+      .catch(() => true) // error encountered, just return from this iteration and skip this file)
     if (failed) {
       return
     }
     console.log(`downloaded ${result.title}`)
-
+    const metadata = {
+      created_on: result.created_on,
+      updated_on: result.updated_on,
+      title: result.title,
+      authors: result.authors.join(', '),
+    }
     // get the text from the PDF
     const text = await dl_utils.ingest_pdf_to_text(file_path)
-    const text_docs = await gen_utils.get_documents_from_text(text)
-    const summary_docs = await gen_utils.get_documents_from_text(result.summary)
+    const text_docs = await gen_utils.get_documents_from_text(text, metadata)
+    const summary_docs = await gen_utils.get_documents_from_text(result.summary, metadata)
 
     // const docs = text_docs.concat(summary_docs)
 
     console.log(`ingesting ${result.title}`)
-    // put the data into Chroma
+    // put the data into Chroma 
     await vectorstore.addDocuments(summary_docs, { ids: _.map(_.range(0, summary_docs.length), num => `${result.title}.summary.${num}`) })
     console.log('added summaries')
     await vectorstore.addDocuments(text_docs, { ids: _.map(_.range(0, text_docs.length), num => `${result.title}.full_text.${num}`) })
