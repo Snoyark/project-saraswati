@@ -28,3 +28,5 @@ export const GENERAL_PROMPT = [`You are a AI helping people learn things about `
   {context}
   </context>
   Question: {input}`]
+
+export const DELETION_LOOKBACK = 365 * 24 * 60 * 60 * 1000; // 1 year

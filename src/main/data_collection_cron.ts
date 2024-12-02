@@ -64,8 +64,8 @@ const run = async function(topic: string, vectorstore: Chroma) {
     }
     console.log(`downloaded ${result.title}`)
     const metadata = {
-      created_on: result.created_on,
-      updated_on: result.updated_on,
+      created_on: Date.parse(result.created_on.toISOString()),
+      updated_on: Date.parse(result.updated_on.toISOString()),
       title: result.title,
       authors: result.authors.join(', '),
     }
