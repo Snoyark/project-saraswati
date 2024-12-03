@@ -89,6 +89,8 @@ const ChatInterface = (args: SearchArgs) => {
           : msg
       )
     );
+    setIsLoading(false)
+ 
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
