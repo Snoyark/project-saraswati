@@ -27,8 +27,6 @@ const init = async function(topic: string, chroma: ChromaClient) {
 const log_number_of_entries = async function(topic: string, chroma: ChromaClient) {
   const collection = await chroma.getOrCreateCollection({ name: topic })
   const num_entries = await collection.count()
-  const x = await collection.get();
-  console.log(x.metadatas[0])
   console.log(`number of entries in ${topic}: ${num_entries}`)
 }
 
@@ -37,7 +35,7 @@ const run = async function(vectorstore: Chroma) {
   const one_year_ago = new Date(Date.now() - DELETION_LOOKBACK)
   await vectorstore.delete({
     filter: {
-      created_on: {"$lt": one_year_ago.getTime() }
+      updated_on: {"$lt": one_year_ago.getTime() }
     }
   })
 }
