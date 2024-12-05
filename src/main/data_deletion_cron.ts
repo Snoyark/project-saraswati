@@ -5,6 +5,7 @@ import { ChromaClient } from 'chromadb';
 import * as _ from 'lodash';
 import { Chroma } from '@langchain/community/vectorstores/chroma';
 import { DELETION_LOOKBACK, NeuroscienceTopic } from '../utils/constants';
+import { config } from '@/utils/config';
 
 /*
   Just delete the file using the metadata filters using the Chroma API
@@ -41,7 +42,7 @@ const run = async function(vectorstore: Chroma) {
 }
 
 const main = async function(topic: string) {
-  const chroma = new ChromaClient();
+  const chroma = config.chroma_client;
   const chroma_client = await init(topic, chroma)
   console.log('initialized collection')
   while (true) {

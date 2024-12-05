@@ -8,6 +8,7 @@ import * as _ from "lodash";
 import { GENERAL_PROMPT } from "./constants";
 import { BaseMessage } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
+import { config } from "./config";
 
 const { createStuffDocumentsChain } = require("langchain/chains/combine_documents");
 const { ChatOllama } = require("@langchain/community/chat_models/ollama");
@@ -68,7 +69,7 @@ export const init_and_get_retriever = async (): Promise<any> => {
   const splitDocs = await splitter.splitDocuments(docs);
   const splitNeuroDocs = await splitter.splitDocuments(neuro_docs);
 
-  const chroma = new ChromaClient();
+  const chroma = config.chroma_client;
   await chroma.reset();
   const collection = await chroma.createCollection({ name: "neuro" }).catch((err: Error) => {
     console.log(err);
