@@ -7,6 +7,7 @@ import * as _ from 'lodash';
 import { Promise as Bluebird } from 'bluebird';
 import { Chroma } from '@langchain/community/vectorstores/chroma';
 import { NeuroscienceTopic } from '../utils/constants';
+import { config } from '@/utils/config';
 // const argv = require('minimist')(process.argv.slice(2)) (from other repos)
 // Idea of this file is to contain all the logic to get data from Arxiv (and any other source)
 // and put that data into Chroma
@@ -93,7 +94,7 @@ const run = async function(topic: string, vectorstore: Chroma) {
 }
 
 const main = async function(topic: string) {
-  const chroma = new ChromaClient();
+  const chroma = config.chroma_client
   const chroma_client = await init(topic, chroma)
   console.log('initialized collection')
   while (true) {

@@ -23,6 +23,8 @@ export type Config = {
 
 const get_config = (): Config => {
   const env = process.env.ENV ? Environment[process.env.ENV as keyof typeof Environment] : Environment.LOCAL;
+  // TODO validate on the env variables to make sure they're all passed in
+  
   let config = {}
   if (env === Environment.LOCAL) {
     config = {
