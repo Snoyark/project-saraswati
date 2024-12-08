@@ -7,6 +7,8 @@
  */
 
 import { ChromaClient } from "chromadb";
+import { createServer } from "http";
+import { WebSocketServer } from "ws";
 
 
 /**
@@ -19,6 +21,7 @@ enum Environment {
 
 export type Config = {
   chroma_client: ChromaClient,
+  websocket_server: WebSocketServer
 }
 
 const get_config = (): Config => {
@@ -27,15 +30,24 @@ const get_config = (): Config => {
   
   let config = {}
   if (env === Environment.LOCAL) {
+    // Create express app and HTTP server
+    // const app = express();
+    // const server = createServer(app);
     config = {
       chroma_client: new ChromaClient({ path: "http://localhost:8000" }),
+      websocket_server: new WebSocketServer({ port: 8080 }), // TODO: use the websocket from config
     }
   } else {
     config = {
       chroma_client: new ChromaClient({ path: process.env.CHROMA_DB_URL }),
+      websocket_server: new WebSocketServer({ port: parseInt(process.env.WEBSOCKET_PORT || '8080') }), // TODO: make this work better with certificates
     }
   }
   return config as Config
 }
 
 export const config = get_config()
+
+function express() {
+  throw new Error("Function not implemented.");
+}

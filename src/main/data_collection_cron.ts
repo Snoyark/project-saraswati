@@ -6,7 +6,7 @@ import { ChromaClient } from 'chromadb';
 import * as _ from 'lodash';
 import { Promise as Bluebird } from 'bluebird';
 import { Chroma } from '@langchain/community/vectorstores/chroma';
-import { NeuroscienceTopic } from '../utils/constants';
+import { SUPPORTED_TOPICS } from '../utils/constants';
 import { config } from '@/utils/config';
 // const argv = require('minimist')(process.argv.slice(2)) (from other repos)
 // Idea of this file is to contain all the logic to get data from Arxiv (and any other source)
@@ -28,7 +28,7 @@ const init = async function(topic: string, chroma: ChromaClient) {
   // Initialize ChromaClient
   // await chroma.reset(); // Only for testing - do not have this uncommented
   const collection = await chroma.getOrCreateCollection({ name: topic }).catch((err: Error) => {
-    console.log(err);
+    console.error(err)
     throw err;
   });
 
@@ -50,20 +50,17 @@ const run = async function(topic: string, vectorstore: Chroma) {
     query: topic,
     max_results: 100,
   })
-  console.log(`got ${search_results.length} results`)
-  console.log(JSON.stringify(search_results[0]))
-  
+      
   await Bluebird.map(search_results, async result => {
     // Download the pdf
     const file_path = `./tmp_pdf_download/${gen_utils.getNanoSecTime()}.pdf`
-    console.log('downloading')
-    const failed = await dl_utils.downloadPdf(result.pdf_link, file_path)
+        const failed = await dl_utils.downloadPdf(result.pdf_link, file_path)
       .then(() => false)
       .catch(() => true) // error encountered, just return from this iteration and skip this file)
     if (failed) {
       return
     }
-    console.log(`downloaded ${result.title}`)
+
     const metadata = {
       created_on: Date.parse(result.created_on.toISOString()),
       updated_on: Date.parse(result.updated_on.toISOString()),
@@ -75,37 +72,32 @@ const run = async function(topic: string, vectorstore: Chroma) {
     const text_docs = await gen_utils.get_documents_from_text(text, metadata)
     const summary_docs = await gen_utils.get_documents_from_text(result.summary, metadata)
 
-    // const docs = text_docs.concat(summary_docs)
-
-    console.log(`ingesting ${result.title}`)
     // put the data into Chroma 
     await vectorstore.addDocuments(summary_docs, { ids: _.map(_.range(0, summary_docs.length), num => `${result.title}.summary.${num}`) })
-    console.log('added summaries')
-    await vectorstore.addDocuments(text_docs, { ids: _.map(_.range(0, text_docs.length), num => `${result.title}.full_text.${num}`) })
-    console.log(`ingested ${result.title}`)
-
-    console.log(`deleting ${result.title}`)
+        await vectorstore.addDocuments(text_docs, { ids: _.map(_.range(0, text_docs.length), num => `${result.title}.full_text.${num}`) })
+    
     // remove the download
     await dl_utils.removeFile(file_path)
-    console.log(`deleted ${result.title}`)
-    
+        
     await gen_utils.delay(2000)
   }, { concurrency: 1 })
 }
 
-const main = async function(topic: string) {
+const main = async function() {
   const chroma = config.chroma_client
-  const chroma_client = await init(topic, chroma)
-  console.log('initialized collection')
-  while (true) {
-    console.log('started run')
-    await run(topic, chroma_client)
-    console.log('finished run.')
-    await log_number_of_entries(topic, chroma)
-    // just wait until the next time
-    process.exit(0)
-    // await gen_utils.delay(60000 * 10)
-  }
-}
+  // gets all the topics
+  const topics = SUPPORTED_TOPICS.map(topic => topic.name).flat()
 
-main(NeuroscienceTopic.name)
+  await Bluebird.map(topics, async topic => {
+    const chroma_client = await init(topic, chroma)
+    while (true) {
+            await run(topic, chroma_client)
+            await log_number_of_entries(topic, chroma)
+      // just wait until the next time
+      process.exit(0)
+      // await gen_utils.delay(60000 * 10)
+    }
+  })
+  }
+
+main()
