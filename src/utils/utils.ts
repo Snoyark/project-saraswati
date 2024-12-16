@@ -5,7 +5,7 @@ import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
 import { createRetrievalChain } from "langchain/chains/retrieval";
 import { SimpleChatModel } from "@langchain/core/language_models/chat_models";
 import * as _ from "lodash";
-import { GENERAL_PROMPT } from "./constants";
+import { GENERAL_PROMPT, Topic } from "./constants";
 import { BaseMessage } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
 import { config } from "./config";
@@ -61,17 +61,18 @@ export const get_documents_from_text = async (text: string, metadata: any = {}) 
   return text_docs
 }
 
-export const init_and_get_retriever = async (): Promise<any> => {
+export const init_and_get_retriever = async (topic: Topic): Promise<any> => {
   console.log('about to wait for loader.load');
-  const docs = await loader.load();
-  const neuro_docs = await neuro_loader.load();
-  console.log('about to wait for the splitter to split the documents');
-  const splitDocs = await splitter.splitDocuments(docs);
-  const splitNeuroDocs = await splitter.splitDocuments(neuro_docs);
+  // const docs = await loader.load();
+  // const neuro_docs = await neuro_loader.load();
+  // console.log('about to wait for the splitter to split the documents');
+  // const splitDocs = await splitter.splitDocuments(docs);
+  // const splitNeuroDocs = await splitter.splitDocuments(neuro_docs);
 
   const chroma = config.chroma_client;
-  await chroma.reset();
-  const collection = await chroma.createCollection({ name: "neuro" }).catch((err: Error) => {
+  // await chroma.reset();
+  console.log(`Attempting to create a collection with name ${topic.url_name}`)
+  const collection = await chroma.getOrCreateCollection({ name: topic.url_name }).catch((err: Error) => {
     console.log(err);
     throw err;
   });
@@ -80,9 +81,6 @@ export const init_and_get_retriever = async (): Promise<any> => {
     collectionName: collection.name,
   });
   console.log('db initialized');
-  await vectorstore.addDocuments(splitDocs);
-  await vectorstore.addDocuments(splitNeuroDocs);
-  console.log('documents added');
 
   return vectorstore.asRetriever();
 };
@@ -101,9 +99,9 @@ export const delay = async (ms: number) => {
   return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
-export const create_retrieval_chain = async (topic_name: string) => {
-  const retriever = await init_and_get_retriever()
-  const prompt = ChatPromptTemplate.fromTemplate(`${GENERAL_PROMPT[0]}${topic_name}${GENERAL_PROMPT[1]}`);
+export const create_retrieval_chain = async (topic: Topic) => {
+  const retriever = await init_and_get_retriever(topic)
+  const prompt = ChatPromptTemplate.fromTemplate(`${GENERAL_PROMPT[0]}${topic.name}${GENERAL_PROMPT[1]}`);
   const document_chain = await get_document_chain(prompt)
 
   const retrievalChain = await createRetrievalChain({
@@ -117,4 +115,8 @@ export const create_retrieval_chain = async (topic_name: string) => {
 export function getNanoSecTime() {
   var hrTime = process.hrtime();
   return hrTime[0] * 1000000000 + hrTime[1];
+}
+
+export function remove_upper_and_space(text: string) {
+  return text.toLowerCase().replace(' ', '_')
 }

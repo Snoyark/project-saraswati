@@ -7,7 +7,7 @@ import * as _ from 'lodash';
 import { Promise as Bluebird } from 'bluebird';
 import { Chroma } from '@langchain/community/vectorstores/chroma';
 import { SUPPORTED_TOPICS } from '../utils/constants';
-import { config } from '@/utils/config';
+import { config } from '../utils/config';
 // const argv = require('minimist')(process.argv.slice(2)) (from other repos)
 // Idea of this file is to contain all the logic to get data from Arxiv (and any other source)
 // and put that data into Chroma
@@ -89,10 +89,11 @@ const main = async function() {
   const topics = SUPPORTED_TOPICS.map(topic => topic.name).flat()
 
   await Bluebird.map(topics, async topic => {
-    const chroma_client = await init(topic, chroma)
+    const collection_name = gen_utils.remove_upper_and_space(topic)
+    const chroma_client = await init(collection_name, chroma)
     while (true) {
-            await run(topic, chroma_client)
-            await log_number_of_entries(topic, chroma)
+      await run(topic, chroma_client)
+      await log_number_of_entries(collection_name, chroma)
       // just wait until the next time
       process.exit(0)
       // await gen_utils.delay(60000 * 10)

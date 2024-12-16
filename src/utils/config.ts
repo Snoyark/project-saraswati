@@ -35,12 +35,12 @@ const get_config = (): Config => {
     // const server = createServer(app);
     config = {
       chroma_client: new ChromaClient({ path: "http://localhost:8000" }),
-      websocket_server: new WebSocketServer({ port: 8080 }), // TODO: use the websocket from config
+      // websocket_server: new WebSocketServer({ port: 8080 }), // TODO: use the websocket from config
     }
   } else {
     config = {
       chroma_client: new ChromaClient({ path: process.env.CHROMA_DB_URL }),
-      websocket_server: new WebSocketServer({ port: parseInt(process.env.WEBSOCKET_PORT || '8080') }), // TODO: make this work better with certificates
+      // websocket_server: new WebSocketServer({ port: parseInt(process.env.WEBSOCKET_PORT || '8080') }), // TODO: make this work better with certificates
     }
   }
   return config as Config

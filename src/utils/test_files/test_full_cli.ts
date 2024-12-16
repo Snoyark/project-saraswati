@@ -12,6 +12,7 @@ const { createStuffDocumentsChain } = require("langchain/chains/combine_document
 const { ChatPromptTemplate } = require("@langchain/core/prompts");
 // const { createRetrievalChain } = require("langchain/chains/retrieval");
 import { createRetrievalChain } from "langchain/chains/retrieval";
+import { SUPPORTED_TOPICS } from "../constants";
 const pdf_util = require('pdf-ts');
 const fs = require('node:fs/promises');
 const { Document } = require("@langchain/core/documents");
@@ -26,7 +27,7 @@ const chatModel = new ChatOllama({
 const main = async function() {
   const readline = createInterface({ input, output });
 
-  const retriever = await init_and_get_retriever()
+  const retriever = await init_and_get_retriever(SUPPORTED_TOPICS[0])
   const prompt = ChatPromptTemplate.fromTemplate(`You are a AI helping people learn things about neuroscience and artificial intelligence. You should provide the source of the information if it comes from the context provided. Answer the following question using the following context if the information is there, and only if it isn't give a general response:
   <context>
   {context}

@@ -14,7 +14,7 @@ export const NeuroscienceTopic: Topic = {
 export const ArtificialIntelligenceTopic: Topic = {
   name: 'Artificial Intelligence',
   alt_names: ['artificial intelligence', 'ai'],
-  url_name: 'ai',
+  url_name: 'artificial_intelligence',
 }
 
 export const SUPPORTED_TOPICS: Topic[] = [
