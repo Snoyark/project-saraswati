@@ -3,7 +3,6 @@ import { stdin as input, stdout as output, env } from "node:process";
 import { delay, get_document_chain, init_and_get_retriever } from "../utils";
 const { ChatOllama } = require("@langchain/community/chat_models/ollama");
 const ChromaClient = require("chromadb").ChromaClient;
-const { CheerioWebBaseLoader } =  require("langchain/document_loaders/web/cheerio");
 const { RecursiveCharacterTextSplitter } = require("langchain/text_splitter");
 const { OllamaEmbeddings } = require("@langchain/community/embeddings/ollama");
 const { Chroma } = require("@langchain/community/vectorstores/chroma")
@@ -13,6 +12,7 @@ const { ChatPromptTemplate } = require("@langchain/core/prompts");
 // const { createRetrievalChain } = require("langchain/chains/retrieval");
 import { createRetrievalChain } from "langchain/chains/retrieval";
 import { SUPPORTED_TOPICS } from "../constants";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
 const pdf_util = require('pdf-ts');
 const fs = require('node:fs/promises');
 const { Document } = require("@langchain/core/documents");
@@ -50,9 +50,9 @@ const main = async function() {
 
   // Main event loop for the conversation
   while (userInput !== ".exit") {
-    messages.push({ role: "user", content: userInput });
+    messages.push(new HumanMessage(userInput));
     try {
-      const stream = await retrievalChain.stream({ input: userInput })
+      const stream = await retrievalChain.stream({ input: userInput, chat_history: messages })
       let full_answer = ""
       for await (const stream_chunk of stream) {
         if (typeof stream_chunk.answer === 'string') {
@@ -68,7 +68,8 @@ const main = async function() {
         userInput = await readline.question("\n");
       }
 
-      const botMessage = { role: 'bot', content: full_answer };
+      // const botMessage = { role: 'bot', content: full_answer };
+      const botMessage = new AIMessage(full_answer)
       if (botMessage) {
         messages.push(botMessage);
       }

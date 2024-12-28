@@ -4,6 +4,7 @@ import express, { Request, Response } from 'express';
 import expressWs from 'express-ws';
 import { WebSocket } from 'ws';
 import * as _ from 'lodash'
+import { AIMessage, HumanMessage } from '@langchain/core/messages';
 
 // Create express app and add websocket capability
 const expressServer = express();           // Type = Express 
@@ -11,6 +12,11 @@ const wsServer = expressWs(expressServer); // Type = expressWs.Instance
 const app = wsServer.app;               // type = wsExpress.Application
 
 type RetrievalChains = { [key: string]: any }
+
+type WebsocketMessage = {
+  msg: String,
+  chat_history: { role: string, content: string }[] | null | undefined
+}
 
 const port = 3001
 const retrieval_chains: RetrievalChains = {}
@@ -40,12 +46,19 @@ app.ws('/:topic', (ws: WebSocket, req: Request) => {
     console.log(`Client connected to WebSocket ${req.params.topic}`);
 
     // Handle incoming messages, need to keep track of message history
-    ws.on('message', async (msg: string) => {
+    ws.on('message', async (websocket_message: WebsocketMessage) => {
         try {
+          const { msg, chat_history: fe_chat_history } = websocket_message
           // need to construct the message here
+          const chat_history = _.map(fe_chat_history, item => {
+            if (item.role === 'user') {
+              return new HumanMessage(item.content)
+            }
+            return new AIMessage(item.content)
+          })
           let full_answer = ""
           const retrieval_chain = retrieval_chains[req.params.topic]
-          const stream = await retrieval_chain.stream({ input: msg })
+          const stream = await retrieval_chain.stream({ input: msg, chat_history })
           for await (const stream_chunk of stream) {
             ws.send(stream_chunk.answer)
             full_answer += stream_chunk.answer
