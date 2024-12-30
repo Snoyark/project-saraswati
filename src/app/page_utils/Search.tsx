@@ -11,7 +11,11 @@ interface Message {
   isStreaming?: boolean;
 }
 
-// New component for streaming text
+interface ChatHistory {
+  role: string;
+  content: string;
+}
+
 const StreamingText: React.FC<{ text: string; onComplete: () => void }> = ({ text, onComplete }) => {
   const [displayedText, setDisplayedText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -21,7 +25,7 @@ const StreamingText: React.FC<{ text: string; onComplete: () => void }> = ({ tex
       const timer = setTimeout(() => {
         setDisplayedText(prev => prev + text[currentIndex]);
         setCurrentIndex(prev => prev + 1);
-      }, 30); // Adjust speed here
+      }, 30);
 
       return () => clearTimeout(timer);
     } else {
@@ -36,35 +40,100 @@ type SearchArgs = {
   topic_name: string;
 };
 
-// commenting this out since this is causing compilation issues on the client side
-// const get_retrieval_chain = async (
-//   topic_name: string, 
-//   setRetrievalChain: React.Dispatch<React.SetStateAction<any | undefined>>
-// ) => {
-//     const retrievalChain = await create_retrieval_chain(topic_name);
-//     setRetrievalChain(retrievalChain);
-// }
-
 const ChatInterface = (args: SearchArgs) => {
-  const initial_message: Message = {
-    id: Date.now().toString(),
-    text: `Hello there! You wanted to learn about ${args.topic_name} today - how can I help?`,
-    sender: 'assistant',
-    timestamp: new Date(),
-    isStreaming: true, // Add streaming to initial message
-  };
-
-  const [messages, setMessages] = useState<Message[]>([initial_message]);
-  const [retrievalChain, setRetrievalChain] = useState<RetrievalChain>();
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  let isStreamingResponse = false;
 
-  // get_retrieval_chain(args.topic_name, setRetrievalChain);
-  // if (retrievalChain) {
-  //   setIsLoading(false);
-  // }
+  // Initialize WebSocket connection
+  useEffect(() => {
+    const ws = new WebSocket(`ws://localhost:3001/${args.topic_name}`);
+
+    ws.onopen = () => {
+      console.log('Connected to WebSocket');
+      setIsConnected(true);
+      setIsLoading(false);
+      
+      // Add initial message after connection
+      const initial_message: Message = {
+        id: Date.now().toString(),
+        text: `Hello there! You wanted to learn about ${args.topic_name} today - how can I help?`,
+        sender: 'assistant',
+        timestamp: new Date(),
+        isStreaming: true,
+      };
+      setMessages([initial_message]);
+      setChatHistory([{ role: 'assistant', content: initial_message.text }]);
+    };
+
+    ws.onmessage = async (event: MessageEvent) => {
+      // Convert blob to text
+      let chunk: string;
+      if (event.data instanceof Blob) {
+        chunk = await event.data.text();
+      } else {
+        chunk = event.data;
+      }
+
+      console.log(`received chunk: ${chunk}`)
+
+      if (chunk === 'END_SEQUENCE') {
+        // end the message
+        console.log('reached the end sequence')
+        isStreamingResponse = false;
+        return;
+      }
+
+      console.log(`streamingMessageId: ${streamingMessageId}, isStreamingResponse: ${isStreamingResponse}, messages: ${JSON.stringify(messages)}`)
+      if (isStreamingResponse) {
+        // Update existing streaming message
+        messages[messages.length - 1].text += chunk
+        console.log(`updated messages: ${JSON.stringify(messages)}`)
+        setMessages(messages);
+      } else {
+        // Create new streaming message
+        const newMessageId = Date.now().toString();
+        setStreamingMessageId(newMessageId);
+        isStreamingResponse = true;
+        console.log(`messages before: ${JSON.stringify(messages)}`)
+        messages.push({
+          id: newMessageId,
+          text: chunk,
+          sender: 'assistant',
+          timestamp: new Date(),
+          isStreaming: true,
+        })
+        console.log(`messages after: ${JSON.stringify(messages)}`)
+        setMessages(messages);
+      }
+    };
+
+    ws.onerror = (error: Event) => {
+      console.error('WebSocket error:', error);
+      setIsLoading(false);
+    };
+
+    ws.onclose = () => {
+      console.log('Disconnected from WebSocket');
+      setIsConnected(false);
+      setIsLoading(false);
+    };
+
+    setSocket(ws);
+
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, [args.topic_name]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -89,13 +158,23 @@ const ChatInterface = (args: SearchArgs) => {
           : msg
       )
     );
-    setIsLoading(false)
- 
+    
+    // Find the completed message and add it to chat history
+    const completedMessage = messages.find(msg => msg.id === messageId);
+    if (completedMessage) {
+      setChatHistory(prev => [...prev, { 
+        role: 'assistant', 
+        content: completedMessage.text 
+      }]);
+    }
+    
+    setStreamingMessageId(null);
+    setIsLoading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim() || isLoading) return;
+    if (!inputText.trim() || isLoading || !isConnected) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -105,27 +184,20 @@ const ChatInterface = (args: SearchArgs) => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    setChatHistory(prev => [...prev, { role: 'user', content: userMessage.text }]);
     setInputText('');
     setIsLoading(true);
+    setStreamingMessageId(null); // Reset streaming message ID for new response
 
-    try {
-      // Simulate LLM API call
-      const response = await new Promise(resolve => 
-        setTimeout(() => resolve("This is a simulated LLM response."), 1000)
-      );
-
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response as string,
-        sender: 'assistant',
-        timestamp: new Date(),
-        isStreaming: true, // Add streaming to assistant messages
+    // Send message through WebSocket with chat history
+    if (socket?.readyState === WebSocket.OPEN) {
+      const websocketMessage = {
+        msg: userMessage.text,
+        chat_history: chatHistory
       };
-
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
+      socket.send(JSON.stringify(websocketMessage));
+    } else {
+      console.error('WebSocket is not connected');
       setIsLoading(false);
     }
   };
@@ -152,7 +224,7 @@ const ChatInterface = (args: SearchArgs) => {
             </MessageBubble>
           </MessageRow>
         ))}
-        {isLoading && (
+        {isLoading && !streamingMessageId && (
           <MessageRow isUser={false}>
             <LoadingMessage>
               <MessageText>Thinking...</MessageText>
@@ -174,10 +246,11 @@ const ChatInterface = (args: SearchArgs) => {
                 handleSubmit(e);
               }
             }}
-            placeholder="Type your message..."
+            placeholder={isConnected ? "Type your message..." : "Connecting..."}
             rows={1}
+            disabled={!isConnected}
           />
-          <SendButton type="submit" disabled={isLoading || !inputText.trim()}>
+          <SendButton type="submit" disabled={isLoading || !inputText.trim() || !isConnected}>
             <SendIcon 
               xmlns="http://www.w3.org/2000/svg" 
               viewBox="0 0 24 24"
