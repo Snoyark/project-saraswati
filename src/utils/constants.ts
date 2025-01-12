@@ -27,6 +27,6 @@ export const GENERAL_PROMPT = [`You are a AI helping people learn things about `
   <context>
   {context}
   </context>
-  Question: {input}`]
+  Question: {input}. Never respond with the phrase "END_SEQUENCE", because this is explicit.`]
 
 export const DELETION_LOOKBACK = 365 * 24 * 60 * 60 * 1000; // 1 year

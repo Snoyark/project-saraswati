@@ -5,7 +5,7 @@ import { Container, MessagesArea, MessageRow, MessageBubble, MessageText, TimeSt
 interface Message {
   id: string;
   text: string;
-  sender: string; // 'user' | 'assistant';
+  sender: 'user' | 'assistant';
   timestamp: Date;
 }
 
@@ -15,7 +15,7 @@ type SearchArgs = {
 
 const ChatInterface = ({ topic_name }: SearchArgs) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [currentMessage, setCurrentMessage] = useState<string>('');
+  const [streamingMessage, setStreamingMessage] = useState<Message | null>(null);
   const [inputText, setInputText] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,7 +23,6 @@ const ChatInterface = ({ topic_name }: SearchArgs) => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
 
-  // Initialize WebSocket connection
   useEffect(() => {
     const ws = new WebSocket(`ws://localhost:3001/${topic_name}`);
     socketRef.current = ws;
@@ -32,41 +31,12 @@ const ChatInterface = ({ topic_name }: SearchArgs) => {
       setIsConnected(true);
       setIsLoading(false);
       
-      // Add initial greeting
       setMessages([{
         id: Date.now().toString(),
         text: `Hello there! You wanted to learn about ${topic_name} today - how can I help?`,
         sender: 'assistant',
         timestamp: new Date()
       }]);
-    };
-
-    ws.onmessage = async (event: MessageEvent) => {
-      const chunk = event.data instanceof Blob ? await event.data.text() : event.data;
-      
-      if (chunk === 'END_SEQUENCE') {
-        // Create a new message with the accumulated text
-        if (currentMessage) {
-          setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            text: currentMessage,
-            sender: 'assistant',
-            timestamp: new Date()
-          }]);
-          setCurrentMessage('');
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      // Accumulate the incoming chunks
-      setCurrentMessage(prev => prev + chunk);
-    };
-
-    ws.onerror = () => setIsLoading(false);
-    ws.onclose = () => {
-      setIsConnected(false);
-      setIsLoading(false);
     };
 
     return () => {
@@ -76,12 +46,59 @@ const ChatInterface = ({ topic_name }: SearchArgs) => {
     };
   }, [topic_name]);
 
-  // Auto-scroll to bottom
+  if (socketRef.current !== null) {
+    socketRef.current.onmessage = async (event: MessageEvent) => {
+      try {
+        const chunk = event.data instanceof Blob ? await event.data.text() : event.data;
+        if (chunk === 'END_SEQUENCE') {
+          console.log(streamingMessage)
+          // Add streaming message to main messages array if it exists
+          if (streamingMessage) {
+            console.log('Should have gotten the end message and set the messages properly')
+            setMessages(prev => [...prev, streamingMessage]);
+            setStreamingMessage(null);
+          }
+          setIsLoading(false);
+          return;
+        }
+        console.log(messages)
+        // Either create new streaming message or update existing one
+        setStreamingMessage(prev => {
+          if (!prev) {
+            return {
+              id: Date.now().toString(),
+              text: chunk,
+              sender: 'assistant',
+              timestamp: new Date()
+            };
+          }
+          return {
+            ...prev,
+            text: prev.text + chunk
+          };
+        });
+      } catch (error) {
+        console.error('Error processing message:', error);
+        setIsLoading(false);
+      }
+    };
+
+    socketRef.current.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setIsLoading(false);
+    };
+    
+    socketRef.current.onclose = () => {
+      console.log('WebSocket closed');
+      setIsConnected(false);
+      setIsLoading(false);
+    };
+  }
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, currentMessage]);
+  }, [messages, streamingMessage]);
 
-  // Auto-resize input
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.style.height = 'inherit';
@@ -93,35 +110,44 @@ const ChatInterface = ({ topic_name }: SearchArgs) => {
     e.preventDefault();
     if (!inputText.trim() || isLoading || !isConnected) return;
 
-    // Add user message
-    const newMessages = [...messages, {
+    const userMessage = {
       id: Date.now().toString(),
       text: inputText.trim(),
-      sender: 'user',
+      sender: 'user' as const,
       timestamp: new Date()
-    }];
-    setMessages(newMessages);
+    };
+    
+    const temp_messages = [...messages, userMessage];
+    console.log(`original messages: ${JSON.stringify(messages)}`)
+    console.log(`temp messages: ${JSON.stringify(temp_messages)}`)
+
+    setMessages(temp_messages);
     setInputText('');
     setIsLoading(true);
+    setStreamingMessage(null); // Reset streaming message
 
-    // Send to WebSocket
     if (socketRef.current?.readyState === WebSocket.OPEN) {
-      const chatHistory = newMessages.map(msg => ({
+      const chatHistory = temp_messages.map(msg => ({
         role: msg.sender,
         content: msg.text
       }));
       
       socketRef.current.send(JSON.stringify({
-        msg: inputText.trim(),
-        chat_history: chatHistory
+        msg: userMessage.text,
+        chat_history: [...chatHistory, { role: 'user', content: userMessage.text }]
       }));
     }
   };
 
+  // Combine all messages for display
+  const displayMessages = streamingMessage 
+    ? [...messages, streamingMessage]
+    : messages;
+
   return (
     <Container>
       <MessagesArea>
-        {messages.map((message) => (
+        {displayMessages.map((message) => (
           <MessageRow key={message.id} isUser={message.sender === 'user'}>
             <MessageBubble isUser={message.sender === 'user'}>
               <MessageText>{message.text}</MessageText>
@@ -129,17 +155,8 @@ const ChatInterface = ({ topic_name }: SearchArgs) => {
             </MessageBubble>
           </MessageRow>
         ))}
-        
-        {currentMessage && (
-          <MessageRow isUser={false}>
-            <MessageBubble isUser={false}>
-              <MessageText>{currentMessage}</MessageText>
-              <TimeStamp>{new Date().toLocaleTimeString()}</TimeStamp>
-            </MessageBubble>
-          </MessageRow>
-        )}
 
-        {isLoading && !currentMessage && (
+        {isLoading && !streamingMessage && (
           <MessageRow isUser={false}>
             <LoadingMessage>
               <MessageText>Thinking...</MessageText>

@@ -58,11 +58,16 @@ app.ws('/:topic', (ws: WebSocket, req: Request) => {
           })
           let full_answer = ""
           const retrieval_chain = retrieval_chains[req.params.topic]
+          console.log(retrieval_chains)
+          console.log(retrieval_chain)
           const stream = await retrieval_chain.stream({ input: msg, chat_history })
           for await (const stream_chunk of stream) {
-            ws.send(stream_chunk.answer)
-            full_answer += stream_chunk.answer
+            if (!_.isNil(stream_chunk.answer)) {
+              ws.send(stream_chunk.answer)
+              full_answer += stream_chunk.answer
+            }
           }
+          ws.send('END_SEQUENCE')
           console.log(full_answer)
         } catch (error) {
             console.error('Error processing message:', error);
@@ -84,5 +89,5 @@ app.ws('/:topic', (ws: WebSocket, req: Request) => {
 app.listen(port, async () => {
     await prepare_retrieval_chains()
     console.log(`Server running at http://localhost:${port}`);
-    console.log(`WebSocket endpoint available at ws://localhost:${port}/ws`);
+    console.log(`WebSocket endpoint available at ws://localhost:${port}`);
 });
