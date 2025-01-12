@@ -9,6 +9,7 @@ import { GENERAL_PROMPT, Topic } from "./constants";
 import { BaseMessage } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
 import { config } from "./config";
+import { DefaultEmbeddingFunction } from "chromadb";
 
 const { createStuffDocumentsChain } = require("langchain/chains/combine_documents");
 const { ChatOllama } = require("@langchain/community/chat_models/ollama");
@@ -63,16 +64,13 @@ export const get_documents_from_text = async (text: string, metadata: any = {}) 
 
 export const init_and_get_retriever = async (topic: Topic): Promise<any> => {
   console.log('about to wait for loader.load');
-  // const docs = await loader.load();
-  // const neuro_docs = await neuro_loader.load();
-  // console.log('about to wait for the splitter to split the documents');
-  // const splitDocs = await splitter.splitDocuments(docs);
-  // const splitNeuroDocs = await splitter.splitDocuments(neuro_docs);
 
   const chroma = config.chroma_client;
   // await chroma.reset();
   console.log(`Attempting to create a collection with name ${topic.url_name}`)
-  const collection = await chroma.getOrCreateCollection({ name: topic.url_name }).catch((err: Error) => {
+  const collections = await chroma.listCollections()
+  console.log(collections)
+  const collection = await chroma.getCollection({ name: topic.url_name, embeddingFunction: new DefaultEmbeddingFunction() }).catch((err: Error) => {
     console.log(err);
     throw err;
   });
@@ -104,12 +102,6 @@ export const create_retrieval_chain = async (topic: Topic) => {
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", GENERAL_PROMPT[0] + topic.name + GENERAL_PROMPT[1]],
   ])
-  //   `${GENERAL_PROMPT[0]}${topic.name}${GENERAL_PROMPT[1]}\n
-  //   Question: {input}
-  //   Context: {context}
-  //   Chat History: {chat_history}
-  //   Answer: `
-  // );
 
   const document_chain = await get_document_chain(prompt)
 

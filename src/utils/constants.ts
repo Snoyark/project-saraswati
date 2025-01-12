@@ -19,7 +19,7 @@ export const ArtificialIntelligenceTopic: Topic = {
 
 export const SUPPORTED_TOPICS: Topic[] = [
   NeuroscienceTopic,
-  ArtificialIntelligenceTopic,
+  // ArtificialIntelligenceTopic,
 ];
 
 // Expected to be length 2. If this changes, the prompting will likely break

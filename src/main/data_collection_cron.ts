@@ -78,6 +78,7 @@ const run = async function(topic: string, vectorstore: Chroma) {
     
     // remove the download
     await dl_utils.removeFile(file_path)
+    console.log(`added one file to chroma: ${JSON.stringify(summary_docs)}`) 
         
     await gen_utils.delay(2000)
   }, { concurrency: 1 })
@@ -86,7 +87,7 @@ const run = async function(topic: string, vectorstore: Chroma) {
 const main = async function() {
   const chroma = config.chroma_client
   // gets all the topics
-  const topics = SUPPORTED_TOPICS.map(topic => topic.name).flat()
+  const topics = SUPPORTED_TOPICS.map(topic => topic.url_name).flat()
 
   await Bluebird.map(topics, async topic => {
     const collection_name = gen_utils.remove_upper_and_space(topic)

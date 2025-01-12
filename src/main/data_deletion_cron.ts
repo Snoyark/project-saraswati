@@ -1,7 +1,7 @@
 
 import * as gen_utils from '../utils/utils'
 
-import { ChromaClient } from 'chromadb';
+import { ChromaClient, DefaultEmbeddingFunction } from 'chromadb';
 import * as _ from 'lodash';
 import { Chroma } from '@langchain/community/vectorstores/chroma';
 import { DELETION_LOOKBACK, NeuroscienceTopic } from '../utils/constants';
@@ -13,7 +13,7 @@ import { config } from '@/utils/config';
 const init = async function(topic: string, chroma: ChromaClient) {
   // Initialize ChromaClient
   // await chroma.reset(); // Only for testing - do not have this uncommented
-  const collection = await chroma.getOrCreateCollection({ name: topic }).catch((err: Error) => {
+  const collection = await chroma.getCollection({ name: topic, embeddingFunction: new DefaultEmbeddingFunction() }).catch((err: Error) => {
     console.log(err);
     throw err;
   });
@@ -26,7 +26,7 @@ const init = async function(topic: string, chroma: ChromaClient) {
 }
 
 const log_number_of_entries = async function(topic: string, chroma: ChromaClient) {
-  const collection = await chroma.getOrCreateCollection({ name: topic })
+  const collection = await chroma.getCollection({ name: topic, embeddingFunction: new DefaultEmbeddingFunction() })
   const num_entries = await collection.count()
   console.log(`number of entries in ${topic}: ${num_entries}`)
 }
@@ -56,4 +56,4 @@ const main = async function(topic: string) {
   }
 }
 
-main(NeuroscienceTopic.name)
+main(NeuroscienceTopic.url_name)
