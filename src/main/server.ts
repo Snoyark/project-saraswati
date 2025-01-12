@@ -14,7 +14,7 @@ const app = wsServer.app;               // type = wsExpress.Application
 type RetrievalChains = { [key: string]: any }
 
 type WebsocketMessage = {
-  msg: String,
+  current_question: String,
   chat_history: { role: string, content: string }[] | null | undefined
 }
 
@@ -46,9 +46,11 @@ app.ws('/:topic', (ws: WebSocket, req: Request) => {
     console.log(`Client connected to WebSocket ${req.params.topic}`);
 
     // Handle incoming messages, need to keep track of message history
-    ws.on('message', async (websocket_message: WebsocketMessage) => {
+    ws.on('message', async (websocket_message_str: string) => {
+      console.log(websocket_message_str)
         try {
-          const { msg, chat_history: fe_chat_history } = websocket_message
+          const websocket_message: WebsocketMessage = JSON.parse(websocket_message_str)
+          const { current_question, chat_history: fe_chat_history } = websocket_message
           // need to construct the message here
           const chat_history = _.map(fe_chat_history, item => {
             if (item.role === 'user') {
@@ -56,11 +58,23 @@ app.ws('/:topic', (ws: WebSocket, req: Request) => {
             }
             return new AIMessage(item.content)
           })
+
+          console.log(`current_question: ${current_question}`)
+
           let full_answer = ""
           const retrieval_chain = retrieval_chains[req.params.topic]
-          console.log(retrieval_chains)
-          console.log(retrieval_chain)
-          const stream = await retrieval_chain.stream({ input: msg, chat_history })
+
+          console.log(await retrieval_chain.invoke({ 
+            input: current_question,
+            messages: chat_history,
+            chat_history: (fe_chat_history ?? []).map(msg => `${msg.role}: ${msg.content}`).join('\n'),
+          }))
+
+          const stream = await retrieval_chain.stream({ 
+            messages: chat_history,
+            chat_history: (fe_chat_history ?? []).map(msg => `${msg.role}: ${msg.content}`).join('\n'), 
+            input: current_question,
+          })
           for await (const stream_chunk of stream) {
             if (!_.isNil(stream_chunk.answer)) {
               ws.send(stream_chunk.answer)

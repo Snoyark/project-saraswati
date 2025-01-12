@@ -101,7 +101,16 @@ export const delay = async (ms: number) => {
 
 export const create_retrieval_chain = async (topic: Topic) => {
   const retriever = await init_and_get_retriever(topic)
-  const prompt = ChatPromptTemplate.fromTemplate(`${GENERAL_PROMPT[0]}${topic.name}${GENERAL_PROMPT[1]}`);
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", GENERAL_PROMPT[0] + topic.name + GENERAL_PROMPT[1]],
+  ])
+  //   `${GENERAL_PROMPT[0]}${topic.name}${GENERAL_PROMPT[1]}\n
+  //   Question: {input}
+  //   Context: {context}
+  //   Chat History: {chat_history}
+  //   Answer: `
+  // );
+
   const document_chain = await get_document_chain(prompt)
 
   const retrievalChain = await createRetrievalChain({

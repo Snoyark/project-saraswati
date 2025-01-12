@@ -46,7 +46,7 @@ const ChatInterface = ({ topic_name }: SearchArgs) => {
     };
   }, [topic_name]);
 
-  if (socketRef.current !== null) {
+  if (socketRef.current !== null && socketRef.current?.readyState === WebSocket.OPEN) {
     socketRef.current.onmessage = async (event: MessageEvent) => {
       try {
         const chunk = event.data instanceof Blob ? await event.data.text() : event.data;
@@ -133,8 +133,8 @@ const ChatInterface = ({ topic_name }: SearchArgs) => {
       }));
       
       socketRef.current.send(JSON.stringify({
-        msg: userMessage.text,
-        chat_history: [...chatHistory, { role: 'user', content: userMessage.text }]
+        chatHistory,
+        current_question: userMessage.text,
       }));
     }
   };
