@@ -133,7 +133,7 @@ const ChatInterface = ({ topic_name }: SearchArgs) => {
       }));
       
       socketRef.current.send(JSON.stringify({
-        chatHistory,
+        chat_history: chatHistory,
         current_question: userMessage.text,
       }));
     }

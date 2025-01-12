@@ -59,7 +59,7 @@ app.ws('/:topic', (ws: WebSocket, req: Request) => {
             return new AIMessage(item.content)
           })
 
-          console.log(`current_question: ${current_question}`)
+          console.log(`fe_chat_history: ${JSON.stringify(fe_chat_history)}`)
 
           let full_answer = ""
           const retrieval_chain = retrieval_chains[req.params.topic]
