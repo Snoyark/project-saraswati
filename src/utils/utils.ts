@@ -89,7 +89,6 @@ export const get_document_chain = async (prompt: ChatPromptTemplate): Promise<an
     llm: chatModel,
     prompt,
   });
-  console.log('create document chain');
   return documentChain;
 };
 
@@ -120,4 +119,15 @@ export function getNanoSecTime() {
 
 export function remove_upper_and_space(text: string) {
   return text.toLowerCase().replace(' ', '_')
+}
+
+type DocumentMetadata = {
+  created_on: number,
+  updated_on: number,
+  title: string,
+  authors: string,
+}
+
+export function stringify_document_metadata(metadata: DocumentMetadata) {
+  return `The following document was created on ${new Date(metadata.created_on).toISOString()} and updated on ${new Date(metadata.updated_on).toISOString()}. Title: ${metadata.title}. Authors: ${metadata.authors}. `
 }
