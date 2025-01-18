@@ -64,12 +64,6 @@ app.ws('/:topic', (ws: WebSocket, req: Request) => {
           let full_answer = ""
           const retrieval_chain = retrieval_chains[req.params.topic]
 
-          console.log(await retrieval_chain.invoke({ 
-            input: current_question,
-            messages: chat_history,
-            chat_history: (fe_chat_history ?? []).map(msg => `${msg.role}: ${msg.content}`).join('\n'),
-          }))
-
           const stream = await retrieval_chain.stream({ 
             messages: chat_history,
             chat_history: (fe_chat_history ?? []).map(msg => `${msg.role}: ${msg.content}`).join('\n'), 

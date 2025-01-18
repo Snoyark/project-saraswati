@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react';
 import { Container, MessagesArea, MessageRow, MessageBubble, MessageText, TimeStamp, LoadingMessage, InputArea, Form, TextArea, SendButton, SendIcon } from './styles/Search';
+import { Topic } from '@/utils/constants';
 
 interface Message {
   id: string;
@@ -10,10 +11,10 @@ interface Message {
 }
 
 type SearchArgs = {
-  topic_name: string;
+  topic: Topic;
 };
 
-const ChatInterface = ({ topic_name }: SearchArgs) => {
+const ChatInterface = ({ topic }: SearchArgs) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [streamingMessage, setStreamingMessage] = useState<Message | null>(null);
   const [inputText, setInputText] = useState('');
@@ -22,6 +23,8 @@ const ChatInterface = ({ topic_name }: SearchArgs) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
+
+  const topic_name = topic.url_name
 
   useEffect(() => {
     const ws = new WebSocket(`ws://localhost:3001/${topic_name}`);
@@ -33,7 +36,7 @@ const ChatInterface = ({ topic_name }: SearchArgs) => {
       
       setMessages([{
         id: Date.now().toString(),
-        text: `Hello there! You wanted to learn about ${topic_name} today - how can I help?`,
+        text: `Hello there! You wanted to learn about ${topic.name.toLowerCase()} today - how can I help?`,
         sender: 'assistant',
         timestamp: new Date()
       }]);
