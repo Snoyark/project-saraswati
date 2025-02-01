@@ -5,6 +5,9 @@ import expressWs from 'express-ws';
 import { WebSocket } from 'ws';
 import * as _ from 'lodash'
 import { AIMessage, HumanMessage } from '@langchain/core/messages';
+import { set_base_vars } from '../utils/config';
+
+set_base_vars()
 
 // Create express app and add websocket capability
 const expressServer = express();           // Type = Express 

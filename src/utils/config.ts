@@ -24,7 +24,16 @@ export type Config = {
   websocket_server: WebSocketServer
 }
 
+// TODO: do this securely
+export const set_base_vars = () => {
+  process.env.LANGSMITH_TRACING = "true"
+  process.env.LANGSMITH_ENDPOINT = "https://api.smith.langchain.com"
+  process.env.LANGSMITH_API_KEY = "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"
+  process.env.LANGSMITH_PROJECT = "project-saraswati"
+}
+
 const get_config = (): Config => {
+  set_base_vars()
   const env = process.env.ENV ? Environment[process.env.ENV as keyof typeof Environment] : Environment.LOCAL;
   // TODO validate on the env variables to make sure they're all passed in
   
