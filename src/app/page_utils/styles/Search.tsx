@@ -102,3 +102,95 @@ export const SendIcon = styled.svg`
   width: 1.25rem;
   height: 1.25rem;
 `;
+
+// New styled components for the selection interface
+export const SelectionContainer = styled.div`
+  padding: 1rem;
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+`;
+
+export const SelectionTitle = styled.h2`
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #374151;
+`;
+
+export const ButtonGroup = styled.div`
+  display: flex;
+  gap: 1rem;
+`;
+
+export const SelectionButton = styled.button`
+  padding: 0.5rem 1rem;
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #2563eb;
+  }
+`;
+
+export const PaperInputContainer = styled.div`
+  padding: 1rem;
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+`;
+
+export const PaperInputForm = styled.form`
+  display: flex;
+  gap: 1rem;
+`;
+
+export const PaperInput = styled.input`
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  color: #374151;
+  
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+`;
+
+export const TopBanner = styled.div`
+  padding: 1rem;
+  background-color: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+`;
+
+export const BannerContent = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+export const BannerText = styled.span`
+  font-weight: 500;
+`;
+
+export const BannerButtons = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+export const BannerButton = styled.button<{ active: boolean }>`
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  background-color: ${props => props.active ? '#3b82f6' : '#e5e7eb'};
+  color: ${props => props.active ? '#ffffff' : '#374151'};
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: ${props => props.active ? '#2563eb' : '#d1d5db'};
+  }
+`;

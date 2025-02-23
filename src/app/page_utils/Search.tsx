@@ -1,6 +1,31 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react';
-import { Container, MessagesArea, MessageRow, MessageBubble, MessageText, TimeStamp, LoadingMessage, InputArea, Form, TextArea, SendButton, SendIcon } from './styles/Search';
+import {
+  Container,
+  MessagesArea,
+  MessageRow,
+  MessageBubble,
+  MessageText,
+  TimeStamp,
+  LoadingMessage,
+  InputArea,
+  Form,
+  TextArea,
+  SendButton,
+  SendIcon,
+  SelectionContainer,
+  SelectionTitle,
+  ButtonGroup,
+  SelectionButton,
+  PaperInputContainer,
+  PaperInputForm,
+  PaperInput,
+  TopBanner,
+  BannerContent,
+  BannerText,
+  BannerButtons,
+  BannerButton
+} from './styles/Search';
 import { Topic } from '@/utils/constants';
 
 interface Message {
@@ -9,6 +34,8 @@ interface Message {
   sender: 'user' | 'assistant';
   timestamp: Date;
 }
+
+type SearchMode = 'general' | 'deep-dive' | null;
 
 type SearchArgs = {
   topic: Topic;
@@ -20,11 +47,120 @@ const ChatInterface = ({ topic }: SearchArgs) => {
   const [inputText, setInputText] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchMode, setSearchMode] = useState<SearchMode>(null);
+  const [selectedPaper, setSelectedPaper] = useState<string>('');
+  const [showPaperInput, setShowPaperInput] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
 
-  const topic_name = topic.url_name
+  const topic_name = topic.url_name;
+
+  const SelectionInterface = () => (
+    <SelectionContainer>
+      <SelectionTitle>How would you like to explore {topic.name}?</SelectionTitle>
+      <ButtonGroup>
+        <SelectionButton onClick={() => handleModeSelection('general')}>
+          General Paper Overview
+        </SelectionButton>
+        <SelectionButton onClick={() => handleModeSelection('deep-dive')}>
+          Paper Deep Dive
+        </SelectionButton>
+      </ButtonGroup>
+    </SelectionContainer>
+  );
+
+  const PaperInputInterface = () => {
+    // const [selectedPaper, setSelectedPaper] = useState('');
+  
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (selectedPaper.trim()) {
+        setSelectedPaper(selectedPaper.trim());
+        setShowPaperInput(false);
+        initializeChat('deep-dive');
+      }
+    };
+  
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSubmit(e);
+      }
+    };
+  
+    return (
+      <PaperInputContainer>
+        <PaperInputForm onSubmit={handleSubmit}>
+          <PaperInput
+            type="text"
+            value={selectedPaper}
+            onChange={(e) => setSelectedPaper(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Enter paper title or DOI..."
+          />
+          <SelectionButton type="submit">
+            Start Deep Dive
+          </SelectionButton>
+        </PaperInputForm>
+      </PaperInputContainer>
+    );
+  };
+
+  const TopBannerInterface = () => (
+    <TopBanner>
+      <BannerContent>
+        <BannerText>
+          {searchMode === 'general' ? 'Exploring General Papers' : `Deep Dive: ${selectedPaper}`}
+        </BannerText>
+        <BannerButtons>
+          <BannerButton
+            active={searchMode === 'general'}
+            onClick={() => handleModeSelection('general')}
+          >
+            General
+          </BannerButton>
+          <BannerButton
+            active={searchMode === 'deep-dive'}
+            onClick={() => handleModeSelection('deep-dive')}
+          >
+            Deep Dive
+          </BannerButton>
+        </BannerButtons>
+      </BannerContent>
+    </TopBanner>
+  );
+
+
+  const handleModeSelection = (mode: SearchMode) => {
+    setSearchMode(mode);
+    if (mode === 'deep-dive') {
+      setShowPaperInput(true);
+    } else if (mode === 'general') {
+      initializeChat('general');
+    }
+  };
+
+  const handlePaperSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedPaper.trim()) {
+      setShowPaperInput(false);
+      initializeChat('deep-dive');
+    }
+  };
+
+  const initializeChat = (mode: 'general' | 'deep-dive') => {
+    const initialMessage = mode === 'general'
+      ? `Hello! You wanted to learn about ${topic.name.toLowerCase()} papers in general - how can I help?`
+      : `Hello! You wanted to do a deep dive into the paper "${selectedPaper}" - what would you like to know?`;
+
+    setMessages([{
+      id: Date.now().toString(),
+      text: initialMessage,
+      sender: 'assistant',
+      timestamp: new Date()
+    }]);
+  };
 
   useEffect(() => {
     const ws = new WebSocket(`ws://localhost:3001/${topic_name}`);
@@ -33,13 +169,6 @@ const ChatInterface = ({ topic }: SearchArgs) => {
     ws.onopen = () => {
       setIsConnected(true);
       setIsLoading(false);
-      
-      setMessages([{
-        id: Date.now().toString(),
-        text: `Hello there! You wanted to learn about ${topic.name.toLowerCase()} today - how can I help?`,
-        sender: 'assistant',
-        timestamp: new Date()
-      }]);
     };
 
     return () => {
@@ -144,11 +273,21 @@ const ChatInterface = ({ topic }: SearchArgs) => {
 
   // Combine all messages for display
   const displayMessages = streamingMessage 
-    ? [...messages, streamingMessage]
-    : messages;
+  ? [...messages, streamingMessage]
+  : messages;
+
+  // Render logic
+  if (!searchMode) {
+    return <SelectionInterface />;
+  }
+
+  if (showPaperInput) {
+    return <PaperInputInterface />;
+  }
 
   return (
     <Container>
+      <TopBannerInterface />
       <MessagesArea>
         {displayMessages.map((message) => (
           <MessageRow key={message.id} isUser={message.sender === 'user'}>
