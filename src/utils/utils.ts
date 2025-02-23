@@ -1,4 +1,4 @@
-import { ChatPromptTemplate } from "@langchain/core/prompts"
+import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts"
 import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
@@ -80,7 +80,10 @@ export const init_and_get_retriever = async (topic: Topic): Promise<any> => {
   });
   console.log('db initialized');
 
-  return vectorstore.asRetriever();
+  // this is a chroma/langchain vectorstore
+  return vectorstore.asRetriever({
+    k: 10, 
+  });
 };
 
 export const get_document_chain = async (prompt: ChatPromptTemplate): Promise<any> => {
@@ -88,6 +91,11 @@ export const get_document_chain = async (prompt: ChatPromptTemplate): Promise<an
   const documentChain: any = await createStuffDocumentsChain({
     llm: chatModel,
     prompt,
+    returnSourceDocuments: true,
+    documentPrompt: new PromptTemplate({ 
+      template: "If the question mentions a title or a paper name or has a phrase in quotations, assume it's the title and match on it. If it asks about latest or most recent, make the query based on updated_on or created_on.",
+      inputVariables: [],
+    }),
   });
   return documentChain;
 };
