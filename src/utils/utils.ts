@@ -86,6 +86,44 @@ export const init_and_get_retriever = async (topic: Topic): Promise<any> => {
   });
 };
 
+const init_and_get_dynamic_retriever = async ({
+  topic,
+  chain_scope,
+  title,
+  oldest_time,
+}: {
+  topic: Topic,
+  chain_scope: string,
+  title?: string,
+  oldest_time?: number
+}): Promise<any> => {
+  console.log('about to wait for loader.load');
+
+  const chroma = config.chroma_client;
+  // await chroma.reset();
+  console.log(`Attempting to create a collection with name ${topic.url_name}`)
+  const collection = await chroma.getCollection({ name: topic.url_name, embeddingFunction: new DefaultEmbeddingFunction() }).catch((err: Error) => {
+    console.log(err);
+    throw err;
+  });
+  const vectorstore = new Chroma(embeddings, {
+    index: chroma,
+    collectionName: collection.name,
+  });
+  console.log('db initialized');
+
+  const title_filter = title ? { title: title } : {};
+  const date_filter = oldest_time ? { updated_on: { "$gt": oldest_time } } : {};
+  const retriever_options = {
+    k: 10,
+    filter: {
+      ...title_filter,
+      ...date_filter,
+    }
+  }
+  return vectorstore.asRetriever(retriever_options);
+}
+
 export const get_document_chain = async (prompt: ChatPromptTemplate): Promise<any> => {
   const chatModel: SimpleChatModel = get_chat_model();
   const documentChain: any = await createStuffDocumentsChain({
@@ -104,10 +142,34 @@ export const delay = async (ms: number) => {
   return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
-export const create_retrieval_chain = async (topic: Topic) => {
+export const create_static_retrieval_chain = async (topic: Topic) => {
   const retriever = await init_and_get_retriever(topic)
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", GENERAL_PROMPT[0] + topic.name + GENERAL_PROMPT[1]],
+  ])
+
+  const document_chain = await get_document_chain(prompt)
+
+  const retrievalChain = await createRetrievalChain({
+    retriever,
+    combineDocsChain: document_chain,
+  });
+
+  return retrievalChain
+}
+
+export const create_dynamic_retrieval_chain = async (params: {
+  topic: Topic,
+  chain_scope: string,
+  title?: string,
+  oldest_time?: number
+}) => {
+  if (!params.title && !params.oldest_time) {
+    throw new Error('title or oldest_time must be provided')
+  }
+  const retriever = await init_and_get_dynamic_retriever(params)
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", GENERAL_PROMPT[0] + params.topic.name + GENERAL_PROMPT[1]],
   ])
 
   const document_chain = await get_document_chain(prompt)

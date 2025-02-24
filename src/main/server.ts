@@ -1,5 +1,5 @@
 import { SUPPORTED_TOPICS } from '../utils/constants';
-import { create_retrieval_chain, remove_upper_and_space } from '../utils/utils';
+import { create_static_retrieval_chain, create_dynamic_retrieval_chain } from '../utils/utils';
 import express, { Request, Response } from 'express';
 import expressWs from 'express-ws';
 import { WebSocket } from 'ws';
@@ -17,8 +17,10 @@ const app = wsServer.app;               // type = wsExpress.Application
 type RetrievalChains = { [key: string]: any }
 
 type WebsocketMessage = {
-  current_question: String,
-  chat_history: { role: string, content: string }[] | null | undefined
+  current_question: string,
+  chat_history: { role: string, content: string }[] | null | undefined,
+  current_paper?: string, // if defined, treat as focused, else treat as general
+  date_range?: number,
 }
 
 const port = 3001
@@ -27,7 +29,7 @@ const retrieval_chains: RetrievalChains = {}
 // Need to run this at startup
 const prepare_retrieval_chains = async () => {
   _.map(SUPPORTED_TOPICS, async topic => {
-    retrieval_chains[topic.url_name] = await create_retrieval_chain(topic)
+    retrieval_chains[topic.url_name] = await create_static_retrieval_chain(topic)
   })
   return retrieval_chains
 }
@@ -50,10 +52,21 @@ app.ws('/:topic', (ws: WebSocket, req: Request) => {
 
     // Handle incoming messages, need to keep track of message history
     ws.on('message', async (websocket_message_str: string) => {
+      const retrieval_chain_key = ``
+      let retrieval_chain = retrieval_chains[retrieval_chain_key]
+      if (!retrieval_chain) {
+        retrieval_chain = create_dynamic_retrieval_chain({
+          topic: req.params.topic,
+          chain_scope: 'general',
+          title: '',
+          oldest_time: 0,
+        })
+        retrieval_chains[retrieval_chain_key] = retrieval_chain
+      }
       console.log(websocket_message_str)
         try {
           const websocket_message: WebsocketMessage = JSON.parse(websocket_message_str)
-          const { current_question, chat_history: fe_chat_history } = websocket_message
+          const { current_question, chat_history: fe_chat_history, current_paper, date_range } = websocket_message
           // need to construct the message here
           const chat_history = _.map(fe_chat_history, item => {
             if (item.role === 'user') {
@@ -88,12 +101,14 @@ app.ws('/:topic', (ws: WebSocket, req: Request) => {
 
     // Handle client disconnection
     ws.on('close', () => {
-        console.log('Client disconnected from WebSocket');
+      delete retrieval_chains[retrieval_chain_key]
+      console.log('Client disconnected from WebSocket');
     });
 
     // Handle errors
     ws.on('error', (error: Error) => {
-        console.error('WebSocket error:', error);
+      delete retrieval_chains[retrieval_chain_key]
+      console.error('WebSocket error:', error);
     });
 });
 
