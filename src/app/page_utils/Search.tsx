@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react';
+import { v4 } from 'uuid';
 import {
   Container,
   MessagesArea,
@@ -163,7 +164,9 @@ const ChatInterface = ({ topic }: SearchArgs) => {
   };
 
   useEffect(() => {
-    const ws = new WebSocket(`ws://localhost:3001/${topic_name}`);
+    // creat a uuid v4 for the customer id
+    const customer_id = v4();
+    const ws = new WebSocket(`ws://localhost:3001/${topic_name}/${customer_id}`);
     socketRef.current = ws;
 
     ws.onopen = () => {

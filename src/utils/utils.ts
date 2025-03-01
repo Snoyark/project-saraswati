@@ -28,6 +28,14 @@ export type RetrievalChain = Runnable<{
   [key: string]: unknown;
 }>;
 
+export type WebsocketMessage = {
+  current_question: string,
+  chat_history: { role: string, content: string }[] | null | undefined,
+  current_paper?: string, // if defined, treat as focused, else treat as general
+  from_time?: number,
+  to_time?: number
+}
+
 
 export const splitter: RecursiveCharacterTextSplitter = new RecursiveCharacterTextSplitter({
   chunkSize: 1000,
@@ -162,10 +170,11 @@ export const create_dynamic_retrieval_chain = async (params: {
   topic: Topic,
   chain_scope: string,
   title?: string,
-  oldest_time?: number
+  from_time?: number,
+  to_time?: number,
 }) => {
-  if (!params.title && !params.oldest_time) {
-    throw new Error('title or oldest_time must be provided')
+  if (!params.title && !(params.from_time && params.to_time)) {
+    throw new Error('title or from_time/to_time must be provided')
   }
   const retriever = await init_and_get_dynamic_retriever(params)
   const prompt = ChatPromptTemplate.fromMessages([
@@ -180,6 +189,15 @@ export const create_dynamic_retrieval_chain = async (params: {
   });
 
   return retrievalChain
+}
+
+export const get_retriever_key = (websocket_msg: WebsocketMessage, topic: string) => {
+  const type = websocket_msg.from_time ? 'general' : 'specific'
+  const metadata = websocket_msg.current_paper 
+    ? websocket_msg.current_paper : 
+      websocket_msg.from_time 
+        ? `${websocket_msg.from_time}_${websocket_msg.to_time}` : '' 
+  return `${type}_${topic}_${metadata}`
 }
 
 export function getNanoSecTime() {

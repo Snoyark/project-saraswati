@@ -175,6 +175,7 @@ export const BannerContent = styled.div`
 
 export const BannerText = styled.span`
   font-weight: 500;
+  color: #374151;
 `;
 
 export const BannerButtons = styled.div`

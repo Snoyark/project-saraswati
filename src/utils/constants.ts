@@ -22,6 +22,8 @@ export const SUPPORTED_TOPICS: Topic[] = [
   ArtificialIntelligenceTopic,
 ];
 
+export const TOPIC_BY_URL_NAME: { [key: string]: Topic } = SUPPORTED_TOPICS.reduce((acc, topic) => ({ ...acc, [topic.url_name]: topic }), {})
+
 export const DAY_MS = 24 * 60 * 60 * 1000
 export const WEEK_MS = 7 * DAY_MS
 
@@ -136,3 +138,8 @@ export const SUPPORTED_RETRIEVAL_CHAINS: { [key: string]: any } = {
 }
 
 export const DELETION_LOOKBACK = 365 * 24 * 60 * 60 * 1000; // 1 year
+
+export const MAX_CONCURRENT_CUSTOMERS = 1000;
+export const MAX_CONCURRENT_RETRIEVERS_PER_CUSTOMER = 10;
+
+export const DEFAULT_CUSTOMER_ID = 'default-customer-id';
