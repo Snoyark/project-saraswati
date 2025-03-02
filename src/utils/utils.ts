@@ -96,12 +96,10 @@ export const init_and_get_retriever = async (topic: Topic): Promise<any> => {
 
 const init_and_get_dynamic_retriever = async ({
   topic,
-  chain_scope,
   title,
   oldest_time,
 }: {
   topic: Topic,
-  chain_scope: string,
   title?: string,
   oldest_time?: number
 }): Promise<any> => {
@@ -168,7 +166,6 @@ export const create_static_retrieval_chain = async (topic: Topic) => {
 
 export const create_dynamic_retrieval_chain = async (params: {
   topic: Topic,
-  chain_scope: string,
   title?: string,
   from_time?: number,
   to_time?: number,
@@ -192,7 +189,7 @@ export const create_dynamic_retrieval_chain = async (params: {
 }
 
 export const get_retriever_key = (websocket_msg: WebsocketMessage, topic: string) => {
-  const type = websocket_msg.from_time ? 'general' : 'specific'
+  const type = websocket_msg.current_paper ? 'specific' : 'general'
   const metadata = websocket_msg.current_paper 
     ? websocket_msg.current_paper : 
       websocket_msg.from_time 

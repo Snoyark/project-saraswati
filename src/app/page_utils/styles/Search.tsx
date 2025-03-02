@@ -115,7 +115,6 @@ export const SelectionTitle = styled.h2`
   font-size: 1.125rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  color: #374151;
 `;
 
 export const ButtonGroup = styled.div`
@@ -152,7 +151,7 @@ export const PaperInput = styled.input`
   padding: 0.5rem 1rem;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
-  color: #374151;
+  color: #000000;
   
   &:focus {
     outline: none;
@@ -193,5 +192,31 @@ export const BannerButton = styled.button<{ active: boolean }>`
   
   &:hover {
     background-color: ${props => props.active ? '#2563eb' : '#d1d5db'};
+  }
+`;
+
+// Date picker styled components
+export const DatePickerContainer = styled.div`
+  margin-top: 0.5rem;
+`;
+
+export const DatePickerLabel = styled.label`
+  display: block;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+`;
+
+export const DatePickerInput = styled.input`
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #374151;
+  
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
   }
 `;

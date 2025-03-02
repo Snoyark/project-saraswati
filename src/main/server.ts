@@ -45,9 +45,9 @@ app.post('/echo', (req: Request, res: Response) => {
 });
 
 // WebSocket endpoint
-app.ws('/:topic/:customer_id', (ws: CustomWebSocket, req: Request) => {
-    console.log(`Client connected to WebSocket ${req.params.topic}`);
-    ws.customerId = req.params.customer_id ?? DEFAULT_CUSTOMER_ID
+app.ws('/:topic', (ws: CustomWebSocket, req: Request) => {
+    console.log(`Client ${req.query.customerId} connected to WebSocket ${req.params.topic}`);
+    ws.customerId = (req.query.customerId as string) ?? DEFAULT_CUSTOMER_ID
 
     // Handle incoming messages, need to keep track of message history
     ws.on('message', async (websocket_message_str: string) => {
@@ -59,30 +59,32 @@ app.ws('/:topic/:customer_id', (ws: CustomWebSocket, req: Request) => {
         ws.send('Sorry, I had an issue understanding that last message.');
         return
       }
-
+      console.log(websocket_message_str)
       const customer_id = ws.customerId ?? DEFAULT_CUSTOMER_ID
       const retrieval_chain_key = get_retriever_key(websocket_message, req.params.topic)
+      console.log(`retrieval_chain_key: ${retrieval_chain_key}`)
       let retrieval_chain;
-      if (!retrieval_chains[customer_id] || !retrieval_chains[customer_id][retrieval_chain_key]) {
-        if (retrieval_chains.length >= MAX_CONCURRENT_CUSTOMERS || retrieval_chains[customer_id].length >= MAX_CONCURRENT_RETRIEVERS_PER_CUSTOMER) {
+      if (_.isNil(retrieval_chains[customer_id]) || _.isNil(retrieval_chains[customer_id][retrieval_chain_key])) {
+        if (retrieval_chains.length >= MAX_CONCURRENT_CUSTOMERS 
+          || (!_.isNil(retrieval_chains[customer_id]) && retrieval_chains[customer_id].length >= MAX_CONCURRENT_RETRIEVERS_PER_CUSTOMER)
+        ) {
           console.error('retrieval_chains.length >= MAX_NUM_RETRIEVERS, deny request to current user')
           ws.send('Sorry, it seems I\'m busy right now. Please try again later.');
           return
         }
         // the current_paper/date_range should be fed in here
-        retrieval_chain = create_dynamic_retrieval_chain({
+        retrieval_chain = await create_dynamic_retrieval_chain({
           topic: TOPIC_BY_URL_NAME[req.params.topic],
-          chain_scope: 'general',
           title: websocket_message.current_paper,
-          from_time: websocket_message.from_time ?? 0,
-          to_time: websocket_message.to_time ?? new Date().getTime(),
+          from_time: websocket_message.from_time,
+          to_time: websocket_message.from_time ? websocket_message.to_time ?? new Date().getTime() : undefined,
         })
         retrieval_chains[customer_id] = retrieval_chains[customer_id] ?? {}
         retrieval_chains[customer_id][retrieval_chain_key] = retrieval_chain
       } else {
         retrieval_chain = retrieval_chains[customer_id][retrieval_chain_key]
       }
-      console.log(websocket_message_str)
+
       try {
         const { current_question, chat_history: fe_chat_history } = websocket_message
         // need to construct the message here
