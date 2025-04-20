@@ -63,7 +63,9 @@ export const search = ({
   start?: number,
 }) => {
   // Search Query stuff: https://info.arxiv.org/help/api/user-manual.html#query_details
-  return axios.get(`${base_url}query?search_query=${query}&sortBy=submittedDate&sortOrder=descending&max_results=${max_results}&start=${start}`)
+  const full_url = `${base_url}query?search_query=${query}&sortBy=submittedDate&sortOrder=descending&max_results=${max_results}&start=${start}`
+  return axios.get(full_url)
+    // .catch(err => { console.log('Got an error');console.log(err.response); throw err })
 }
 
 const process_result = (entry: any) => {
@@ -98,10 +100,13 @@ export const get_results = async ({
     start,
   })
   const js_data = JSON.parse(xmlParser.xml2json(res.data, { compact: true, spaces: 2 }))
+  if (!_.isArray(js_data.feed.entry)) {
+    return [process_result(js_data.feed.entry)]
+  }
   const articles: ArxivArticle[] = _.map(js_data.feed.entry, entry => {
     return process_result(entry)
   })
   return articles
 }
 
-get_results({ query: 'neuroscience' })
+get_results({ query: '"From Empirical Brain Networks towards Modeling Music Perception"' })
