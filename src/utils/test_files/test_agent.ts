@@ -20,13 +20,17 @@ const search = tool(async ({ query }) => {
   }),
 });
 
-const search_arxiv = tool(async ({ subject }) => {
-  return await get_results({ query: subject })
+const search_arxiv = tool(async ({ subject, number_of_results }) => {
+  console.log('called search_arxiv')
+  const results = await get_results({ query: subject, max_results: Number(number_of_results) })
+  console.log('got the results')
+  return JSON.stringify(results)
 }, {
   name: "search",
-  description: "Call to search papers on Arxiv",
+  description: "A tool to find the latest research papers on a topic. This queries Arxiv to find the latest paper.",
   schema: z.object({
-    subject: z.string().describe("The subject to search on Arxiv."),
+    subject: z.string().describe("The subject to search on Arxiv. This can be a general subject, like 'neuroscience' or a specific paper, like 'All you need is attention'."),
+    number_of_results: z.string().optional().describe("The number of results to return. Defaults to 10."),
   }),
 });
 
@@ -35,7 +39,11 @@ const download_pdf_links = tool(async ({ url }) => {
   const failed = await dl_utils.downloadPdf(url, file_path)
     .then(() => false)
     .catch(() => true) // error encountered, just return from this iteration and skip this file)
-  return url
+  if (failed) {
+    return "failed to download"
+  } else {
+    return await dl_utils.ingest_pdf_to_text(file_path)
+  }
 }, {
   name: "download_pdf_links",
   description: "Call to download pdfs from url.",
@@ -46,12 +54,13 @@ const download_pdf_links = tool(async ({ url }) => {
 
 const model = new ChatOllama({
   baseUrl: "http://localhost:11434", // Default value
-  model: "qwq",
+  model: "llama3.2",
 });
 
 const agent = createReactAgent({
   llm: model,
-  tools: [search_arxiv],
+  tools: [search_arxiv, download_pdf_links],
+  prompt: "You are an AI Assistant trained at pulling information from data sources so the user can understand research papers. Focus on being friendly and explaining things."
 });
 
 const main = async () => {
@@ -60,7 +69,7 @@ const main = async () => {
     {
       messages: [{
         role: "user",
-        content: "What is the latest paper published on neuroscience?"
+        content: "Can you tell me about this research paper: \"From Empirical Brain Networks towards Modeling Music Perception\"?"
       }]
     }
   );

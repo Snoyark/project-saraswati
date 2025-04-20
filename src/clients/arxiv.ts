@@ -101,7 +101,6 @@ export const get_results = async ({
   const articles: ArxivArticle[] = _.map(js_data.feed.entry, entry => {
     return process_result(entry)
   })
-  console.log(articles)
   return articles
 }
 
