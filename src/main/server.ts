@@ -6,6 +6,7 @@ import { WebSocket } from 'ws';
 import * as _ from 'lodash'
 import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { set_base_vars } from '../utils/config';
+import { construct_agent } from '../utils/agents';
 
 set_base_vars()
 
@@ -23,6 +24,7 @@ interface CustomWebSocket extends WebSocket {
 
 const port = 3001
 const retrieval_chains: RetrievalChains = {}
+let agent: any = null
 
 // Need to run this at startup
 const prepare_retrieval_chains = async () => {
@@ -45,8 +47,7 @@ app.post('/echo', (req: Request, res: Response) => {
 });
 
 // WebSocket endpoint
-app.ws('/:topic', (ws: CustomWebSocket, req: Request) => {
-    console.log(`Client ${req.query.customerId} connected to WebSocket ${req.params.topic}`);
+app.ws('/chat', (ws: CustomWebSocket, req: Request) => {
     ws.customerId = (req.query.customerId as string) ?? DEFAULT_CUSTOMER_ID
 
     // Handle incoming messages, need to keep track of message history
@@ -60,29 +61,9 @@ app.ws('/:topic', (ws: CustomWebSocket, req: Request) => {
         return
       }
       console.log(websocket_message_str)
-      const customer_id = ws.customerId ?? DEFAULT_CUSTOMER_ID
-      const retrieval_chain_key = get_retriever_key(websocket_message, req.params.topic)
-      console.log(`retrieval_chain_key: ${retrieval_chain_key}`)
-      let retrieval_chain;
-      if (_.isNil(retrieval_chains[customer_id]) || _.isNil(retrieval_chains[customer_id][retrieval_chain_key])) {
-        if (retrieval_chains.length >= MAX_CONCURRENT_CUSTOMERS 
-          || (!_.isNil(retrieval_chains[customer_id]) && retrieval_chains[customer_id].length >= MAX_CONCURRENT_RETRIEVERS_PER_CUSTOMER)
-        ) {
-          console.error('retrieval_chains.length >= MAX_NUM_RETRIEVERS, deny request to current user')
-          ws.send('Sorry, it seems I\'m busy right now. Please try again later.');
-          return
-        }
-        // the current_paper/date_range should be fed in here
-        retrieval_chain = await create_dynamic_retrieval_chain({
-          topic: TOPIC_BY_URL_NAME[req.params.topic],
-          title: websocket_message.current_paper,
-          from_time: websocket_message.from_time,
-          to_time: websocket_message.from_time ? websocket_message.to_time ?? new Date().getTime() : undefined,
-        })
-        retrieval_chains[customer_id] = retrieval_chains[customer_id] ?? {}
-        retrieval_chains[customer_id][retrieval_chain_key] = retrieval_chain
-      } else {
-        retrieval_chain = retrieval_chains[customer_id][retrieval_chain_key]
+
+      if (agent === null) {
+        agent = construct_agent()
       }
 
       try {
@@ -95,20 +76,23 @@ app.ws('/:topic', (ws: CustomWebSocket, req: Request) => {
           return new AIMessage(item.content)
         })
 
+        chat_history.push(new HumanMessage(current_question))
+
         console.log(`fe_chat_history: ${JSON.stringify(fe_chat_history)}`)
 
         let full_answer = ""
-        // const retrieval_chain = retrieval_chains[req.params.topic]
+        const stream = await agent.stream({ messages: chat_history })
 
-        const stream = await retrieval_chain.stream({ 
-          messages: chat_history,
-          chat_history: (fe_chat_history ?? []).map(msg => `${msg.role}: ${msg.content}`).join('\n'), 
-          input: current_question,
-        })
-        for await (const stream_chunk of stream) {
-          if (!_.isNil(stream_chunk.answer)) {
-            ws.send(stream_chunk.answer)
-            full_answer += stream_chunk.answer
+        for await (const chunk of stream) {
+          console.log(JSON.stringify(chunk))
+          if (chunk.agent && chunk.agent.messages && chunk.agent.messages[0] && chunk.agent.messages[0].content && chunk.agent.messages[0].content.length > 0) {
+            full_answer = chunk.agent.messages[0].content
+            for (const char of chunk.agent.messages[0].content) {
+              process.stdout.write(char);
+              ws.send(char)
+              // Optional: add a small delay to simulate typing
+              await new Promise(resolve => setTimeout(resolve, 10));
+            }
           }
         }
         ws.send('END_SEQUENCE')

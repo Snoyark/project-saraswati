@@ -107,7 +107,7 @@ const ChatInterface = ({ topic }: SearchArgs) => {
   };
 
   useEffect(() => {
-    const ws = new WebSocket(`ws://localhost:3001/${topic_name}?customerId=${v4()}`);
+    const ws = new WebSocket(`ws://localhost:3001/chat?customerId=${v4()}`);
     socketRef.current = ws;
 
     ws.onopen = () => {
