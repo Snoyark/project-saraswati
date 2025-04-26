@@ -23,16 +23,7 @@ interface CustomWebSocket extends WebSocket {
 }
 
 const port = 3001
-const retrieval_chains: RetrievalChains = {}
 let agent: any = null
-
-// Need to run this at startup
-const prepare_retrieval_chains = async () => {
-  _.map(SUPPORTED_TOPICS, async topic => {
-    retrieval_chains[topic.url_name] = await create_static_retrieval_chain(topic)
-  })
-  return retrieval_chains
-}
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -49,7 +40,7 @@ app.post('/echo', (req: Request, res: Response) => {
 // WebSocket endpoint
 app.ws('/chat', (ws: CustomWebSocket, req: Request) => {
     ws.customerId = (req.query.customerId as string) ?? DEFAULT_CUSTOMER_ID
-
+    console.log('connected to ws')
     // Handle incoming messages, need to keep track of message history
     ws.on('message', async (websocket_message_str: string) => {
       let websocket_message: WebsocketMessage;
@@ -105,13 +96,11 @@ app.ws('/chat', (ws: CustomWebSocket, req: Request) => {
 
     // Handle client disconnection
     ws.on('close', () => {
-      delete retrieval_chains[ws.customerId ?? DEFAULT_CUSTOMER_ID]
       console.log('Client disconnected from WebSocket');
     });
 
     // Handle errors
     ws.on('error', (error: Error) => {
-      delete retrieval_chains[ws.customerId ?? DEFAULT_CUSTOMER_ID]
       console.error('WebSocket error:', error);
     });
 });

@@ -6,6 +6,7 @@ import { ChatOllama } from "@langchain/ollama";
 import { get_results } from "../clients/arxiv";
 import * as dl_utils from '../utils/download_utils'
 import * as gen_utils from '../utils/utils'
+import { AGENT_PROMPT } from "./constants";
 
 export const construct_agent = () => {
   const search_arxiv = tool(async ({ subject, number_of_results }) => {
@@ -46,6 +47,6 @@ export const construct_agent = () => {
   return createReactAgent({
     llm: model,
     tools: [search_arxiv, download_pdf_links],
-    prompt: "You are an AI Assistant trained at pulling information from data sources so the user can understand research papers. Focus on being friendly and explaining things. If you are asked about a specific paper, you should use the tool for searching, get the url, then download the file and get the data from it, and use that to answer the question."
+    prompt: AGENT_PROMPT,//"You are an AI Assistant trained at pulling information from data sources so the user can understand research papers. Focus on being friendly and explaining things. If you are asked about a specific paper, you should use the tool for searching, get the url, then download the file and get the data from it, and use that to answer the question."
   });
 }
