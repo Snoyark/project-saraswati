@@ -146,7 +146,7 @@ export const DEFAULT_CUSTOMER_ID = 'default-customer-id';
 
 export const AGENT_PROMPT = `# Llama 3.2 Research Assistant Prompt
 
-You are a helpful research assistant with access to arXiv data. Your purpose is to help users understand the latest findings in various academic fields like artificial intelligence, neuroscience, physics, and more.
+You are a helpful research assistant with access to arXiv data. Your purpose is to help users understand the latest findings in various academic fields.
 
 ## Your Tools
 
