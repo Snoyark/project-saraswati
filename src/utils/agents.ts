@@ -10,14 +10,14 @@ import { AGENT_PROMPT } from "./constants";
 
 export const construct_agent = () => {
   const search_arxiv = tool(async ({ subject, number_of_results }) => {
-    const results = await get_results({ query: `"${subject}"`, max_results: parseInt(number_of_results ?? "10") })
+    const results = await get_results({ query: `"${subject}"`, max_results: parseInt(number_of_results ?? "5") })
     return JSON.stringify(results)
   }, {
     name: "search_arxiv",
     description: "A tool to find the latest research papers on a topic. This queries Arxiv to find the latest paper.",
     schema: z.object({
-      subject: z.string().describe("The subject to search on Arxiv. This can be a general subject, like 'neuroscience' or a specific paper, like 'All you need is attention'."),
-      number_of_results: z.string().optional().describe("The number of results to return. Defaults to 10."),
+      subject: z.string().describe("The subject to search on Arxiv."),
+      number_of_results: z.string().optional().describe("The number of results to return. Defaults to 5."),
     }),
   });
   
@@ -25,7 +25,11 @@ export const construct_agent = () => {
     const file_path = `./tmp_pdf_download/${gen_utils.getNanoSecTime()}.pdf`
     const failed = await dl_utils.downloadPdf(url, file_path)
       .then(() => false)
-      .catch(() => true) // error encountered, just return from this iteration and skip this file)
+      .catch(err => {
+        console.log(`failed to download: ${err}`)
+        console.error(err)
+        return true
+      }) // error encountered, just return from this iteration and skip this file)
     if (failed) {
       return "failed to download"
     } else {

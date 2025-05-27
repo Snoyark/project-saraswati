@@ -61,14 +61,12 @@ const ChatInterface = ({ topic }: SearchArgs) => {
         if (chunk === 'END_SEQUENCE') {
           // Add streaming message to main messages array if it exists
           if (streamingMessage) {
-            console.log('Should have gotten the end message and set the messages properly')
             setMessages(prev => [...prev, streamingMessage]);
             setStreamingMessage(null);
           }
           setIsLoading(false);
           return;
         }
-        console.log(messages)
         // Either create new streaming message or update existing one
         setStreamingMessage(prev => {
           if (!prev) {
@@ -96,7 +94,6 @@ const ChatInterface = ({ topic }: SearchArgs) => {
     };
     
     socketRef.current.onclose = () => {
-      console.log('WebSocket closed');
       setIsConnected(false);
       setIsLoading(false);
     };
@@ -125,8 +122,6 @@ const ChatInterface = ({ topic }: SearchArgs) => {
     };
     
     const temp_messages = [...messages, userMessage];
-    console.log(`original messages: ${JSON.stringify(messages)}`)
-    console.log(`temp messages: ${JSON.stringify(temp_messages)}`)
 
     setMessages(temp_messages);
     setInputText('');

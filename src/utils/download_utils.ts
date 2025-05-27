@@ -22,7 +22,7 @@ export async function downloadPdf(url: string, outputPath: string): Promise<void
       return res
     })
     .catch((err) => {
-      console.log(`failed to download`)
+      console.log(`failed to download ${url}: ${err}`)
       throw new Error('failed to download file')
     });
 

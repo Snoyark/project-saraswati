@@ -51,7 +51,6 @@ app.ws('/chat', (ws: CustomWebSocket, req: Request) => {
         ws.send('Sorry, I had an issue understanding that last message.');
         return
       }
-      console.log(websocket_message_str)
 
       if (agent === null) {
         agent = construct_agent()
@@ -69,13 +68,10 @@ app.ws('/chat', (ws: CustomWebSocket, req: Request) => {
 
         chat_history.push(new HumanMessage(current_question))
 
-        console.log(`fe_chat_history: ${JSON.stringify(fe_chat_history)}`)
-
         let full_answer = ""
         const stream = await agent.stream({ messages: chat_history })
 
         for await (const chunk of stream) {
-          console.log(JSON.stringify(chunk))
           if (chunk.agent && chunk.agent.messages && chunk.agent.messages[0] && chunk.agent.messages[0].content && chunk.agent.messages[0].content.length > 0) {
             full_answer = chunk.agent.messages[0].content
             for (const char of chunk.agent.messages[0].content) {
@@ -87,7 +83,6 @@ app.ws('/chat', (ws: CustomWebSocket, req: Request) => {
           }
         }
         ws.send('END_SEQUENCE')
-        console.log(full_answer)
       } catch (error) {
           console.error('Error processing message:', error);
           ws.send('Sorry, I had an issue understanding that last message.');
