@@ -63,7 +63,8 @@ export const search = ({
   start?: number,
 }) => {
   // Search Query stuff: https://info.arxiv.org/help/api/user-manual.html#query_details
-  const full_url = `${base_url}query?search_query=${query}&sortBy=submittedDate&sortOrder=descending&max_results=${max_results}&start=${start}`
+  // found that '-' doesn't work in queries - replacing it with ' '
+  const full_url = `${base_url}query?search_query=${query.replace(/-/g, ' ')}&sortBy=submittedDate&sortOrder=descending&max_results=${max_results}&start=${start}`
   return axios.get(full_url)
     // .catch(err => { console.log('Got an error');console.log(err.response); throw err })
 }

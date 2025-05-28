@@ -66,7 +66,7 @@ app.ws('/chat', (ws: CustomWebSocket, req: Request) => {
           return new AIMessage(item.content)
         })
 
-        chat_history.push(new HumanMessage(current_question))
+        console.log(`chat_history length: ${chat_history.length}`)
 
         let full_answer = ""
         const stream = await agent.stream({ messages: chat_history })

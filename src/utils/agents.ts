@@ -16,7 +16,7 @@ export const construct_agent = () => {
     name: "search_arxiv",
     description: "A tool to find the latest research papers on a topic. This queries Arxiv to find the latest paper.",
     schema: z.object({
-      subject: z.string().describe("The subject to search on Arxiv."),
+      subject: z.string().describe("The subject to search on Arxiv. This can be an academic topic or a specific paper."),
       number_of_results: z.string().optional().describe("The number of results to return. Defaults to 5."),
     }),
   });
@@ -39,7 +39,7 @@ export const construct_agent = () => {
     name: "download_pdf_links",
     description: "Call to download pdfs from url.",
     schema: z.object({
-      url: z.string().describe("The url to download the pdf from."),
+      url: z.string().describe("The url to download the pdf from. This should come from the search_arxiv tool."),
     }),
   })
 
