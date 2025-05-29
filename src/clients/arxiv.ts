@@ -41,7 +41,6 @@ export async function* paginated_search({
         start,
       })
       if (max_date && results.length > 0 && results[0].created_on.getTime() < max_date) {
-        console.log('paginated ended early because of max_date')
         break
       }
       start += DEFAULT_MAX_RESULTS
@@ -66,7 +65,6 @@ export const search = ({
   // found that '-' doesn't work in queries - replacing it with ' '
   const full_url = `${base_url}query?search_query=${query.replace(/-/g, ' ')}&sortBy=submittedDate&sortOrder=descending&max_results=${max_results}&start=${start}`
   return axios.get(full_url)
-    // .catch(err => { console.log('Got an error');console.log(err.response); throw err })
 }
 
 const process_result = (entry: any) => {

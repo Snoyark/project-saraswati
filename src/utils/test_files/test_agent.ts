@@ -13,9 +13,7 @@ const main = async () => {
     }
   );
   for await (const chunk of result) {
-    console.log(JSON.stringify(chunk))
     if (chunk.agent && chunk.agent.messages && chunk.agent.messages[0] && chunk.agent.messages[0].content && chunk.agent.messages[0].content.length > 0) {
-      console.log("Final response:");
         for (const char of chunk.agent.messages[0].content) {
           process.stdout.write(char);
           // Optional: add a small delay to simulate typing

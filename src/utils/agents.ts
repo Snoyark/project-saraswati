@@ -27,7 +27,6 @@ export const construct_agent = () => {
       .then(() => false)
       .catch(err => {
         console.log(`failed to download: ${err}`)
-        console.error(err)
         return true
       }) // error encountered, just return from this iteration and skip this file)
     if (failed) {
