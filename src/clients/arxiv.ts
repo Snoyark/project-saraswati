@@ -41,7 +41,6 @@ export async function* paginated_search({
         start,
       })
       if (max_date && results.length > 0 && results[0].created_on.getTime() < max_date) {
-        console.log('paginated ended early because of max_date')
         break
       }
       start += DEFAULT_MAX_RESULTS
@@ -63,7 +62,9 @@ export const search = ({
   start?: number,
 }) => {
   // Search Query stuff: https://info.arxiv.org/help/api/user-manual.html#query_details
-  return axios.get(`${base_url}query?search_query=${query}&sortBy=submittedDate&sortOrder=descending&max_results=${max_results}&start=${start}`)
+  // found that '-' doesn't work in queries - replacing it with ' '
+  const full_url = `${base_url}query?search_query=${query.replace(/-/g, ' ')}&sortBy=submittedDate&sortOrder=descending&max_results=${max_results}&start=${start}`
+  return axios.get(full_url)
 }
 
 const process_result = (entry: any) => {
@@ -98,10 +99,13 @@ export const get_results = async ({
     start,
   })
   const js_data = JSON.parse(xmlParser.xml2json(res.data, { compact: true, spaces: 2 }))
+  if (!_.isArray(js_data.feed.entry)) {
+    return [process_result(js_data.feed.entry)]
+  }
   const articles: ArxivArticle[] = _.map(js_data.feed.entry, entry => {
     return process_result(entry)
   })
   return articles
 }
 
-get_results({ query: 'neuroscience' })
+get_results({ query: '"From Empirical Brain Networks towards Modeling Music Perception"' })

@@ -17,9 +17,7 @@ export default function Home() {
         </li>
         <li>
           <UnorderedHorizontalList>
-            {SUPPORTED_TOPICS.map((item, index) => (
-              <li key={index}><Link href={`/${item.url_name}`}>{item.name}</Link></li>
-            ))}
+            <Link href={`/learn`}>{"Learn about recent papers"}</Link>
           </UnorderedHorizontalList>
         </li>
       </UnorderedVerticalList>

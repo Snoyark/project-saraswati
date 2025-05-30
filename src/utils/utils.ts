@@ -71,13 +71,10 @@ export const get_documents_from_text = async (text: string, metadata: any = {}) 
 }
 
 export const init_and_get_retriever = async (topic: Topic): Promise<any> => {
-  console.log('about to wait for loader.load');
-
   const chroma = config.chroma_client;
   // await chroma.reset();
   console.log(`Attempting to create a collection with name ${topic.url_name}`)
   const collections = await chroma.listCollections()
-  console.log(collections)
   const collection = await chroma.getCollection({ name: topic.url_name, embeddingFunction: new DefaultEmbeddingFunction() }).catch((err: Error) => {
     console.log(err);
     throw err;
@@ -103,8 +100,6 @@ const init_and_get_dynamic_retriever = async ({
   title?: string,
   oldest_time?: number
 }): Promise<any> => {
-  console.log('about to wait for loader.load');
-
   const chroma = config.chroma_client;
   // await chroma.reset();
   console.log(`Attempting to create a collection with name ${topic.url_name}`)

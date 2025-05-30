@@ -18,12 +18,10 @@ export async function downloadPdf(url: string, outputPath: string): Promise<void
       url: url,
       responseType: 'stream'
     }).then((res) => {
-      console.log('downloaded successfully')
       return res
     })
     .catch((err) => {
-      console.log(`failed to download`)
-      throw new Error('failed to download file')
+      throw new Error(`failed to download ${url}: ${err}`)
     });
 
     // Pipe the response data to a file
