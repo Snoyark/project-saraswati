@@ -17,6 +17,8 @@ export const ArtificialIntelligenceTopic: Topic = {
   url_name: 'artificial_intelligence',
 }
 
+export const OLLAMA_MODEL = 'llama3.2';
+
 export const SUPPORTED_TOPICS: Topic[] = [
   // NeuroscienceTopic,
   ArtificialIntelligenceTopic,

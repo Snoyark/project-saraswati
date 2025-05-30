@@ -2,13 +2,11 @@ import { TOPIC_BY_URL_NAME, DEFAULT_CUSTOMER_ID, MAX_CONCURRENT_RETRIEVERS_PER_C
 import { create_static_retrieval_chain, create_dynamic_retrieval_chain, WebsocketMessage, get_retriever_key } from '../utils/utils';
 import express, { Request, Response } from 'express';
 import expressWs from 'express-ws';
+import 'dotenv/config';
 import { WebSocket } from 'ws';
 import * as _ from 'lodash'
 import { AIMessage, HumanMessage } from '@langchain/core/messages';
-import { set_base_vars } from '../utils/config';
 import { construct_agent } from '../utils/agents';
-
-set_base_vars()
 
 // Create express app and add websocket capability
 const expressServer = express();           // Type = Express 

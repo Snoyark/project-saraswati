@@ -6,7 +6,7 @@ import { ChatOllama } from "@langchain/ollama";
 import { get_results } from "../clients/arxiv";
 import * as dl_utils from '../utils/download_utils'
 import * as gen_utils from '../utils/utils'
-import { AGENT_PROMPT } from "./constants";
+import { AGENT_PROMPT, OLLAMA_MODEL } from "./constants";
 
 export const construct_agent = () => {
   const search_arxiv = tool(async ({ subject, number_of_results }) => {
@@ -44,7 +44,7 @@ export const construct_agent = () => {
 
   const model = new ChatOllama({
     baseUrl: "http://localhost:11434", // Default value
-    model: "llama3.2",
+    model: OLLAMA_MODEL,
   });
   
   return createReactAgent({
