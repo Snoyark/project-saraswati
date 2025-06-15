@@ -2,7 +2,15 @@
 If you ever wanted to see a bunch of research papers in a field (say, artificial intelligence) listed for you, so you could keep up-to-date with the latest papers, AND wanted to spend less than an hour per paper, this project is for you! After setting it up, this project creates a chatbot that pulls papers from Arxiv that have been recently published and gives explanations of the paper itself. It can also dive deeper into single papers if something doesn't make sense. Ideally, it should make paper reading faster and more approachable for someone without a scientific/academic background.
 
 ## Basic Local Setup
-To run this locally, you'll need to install [Ollama](https://ollama.com/download) for your system (which should be OS agnostic). After installing Ollama, you'll need to start running the model locally. This project uses `llama3.2` by default, but this can be changed in the `src/utils/constants.ts` file, under the variable `OLLAMA_MODEL`.
+If you're running Windows, I'd recommend using [git bash](https://gitforwindows.org), which allows Linux style commands easily. This will install `git` in general (a version control software), in addition to a shell that's essential to running the following commands.
+
+To run this locally, you'll need to install [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm), which is the package manager used to install all of the dependencies. After installation, in the terminal, run:
+
+```
+npm install typescript --save-dev
+```
+
+You'll also need to install [Ollama](https://ollama.com/download) for your system (which should be OS agnostic). After installing Ollama, you'll need to start running the model locally. This project uses `llama3.2` by default, but this can be changed in the `src/utils/constants.ts` file, under the variable `OLLAMA_MODEL`.
 
 Run:
 ```
