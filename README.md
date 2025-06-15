@@ -3,9 +3,10 @@ If you ever wanted to see a bunch of research papers in a field (say, artificial
 
 ## Next steps
 1. Host this on some local hardware so anyone can just start interacting with it using a website.
-2. Improve the UI so it's more intuitive and professional.
-3. Allow for multiple chats per user session.
-4. Allow for history/accounts.
+2. Add tests and valdation on behavior.
+3. Improve the UI so it's more intuitive and professional.
+4. Allow for multiple chats per user session.
+5. Allow for history/accounts.
 
 ## Basic Local Setup
 If you're running Windows, I'd recommend using [git bash](https://gitforwindows.org), which allows Linux style commands easily. This will install `git` in general (a version control software), in addition to a shell that's essential to running the following commands.
