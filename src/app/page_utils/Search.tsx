@@ -19,7 +19,7 @@ type SearchArgs = {
   topic: Topic;
 };
 
-const ChatInterface = ({ topic }: SearchArgs) => {
+const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [streamingMessage, setStreamingMessage] = useState<Message | null>(null);
   const [inputText, setInputText] = useState('');
@@ -28,8 +28,6 @@ const ChatInterface = ({ topic }: SearchArgs) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
-
-  const topic_name = topic.url_name
 
   useEffect(() => {
     const ws = new WebSocket(`ws://localhost:3001/chat?customer_id=${v4()}}`);
@@ -52,7 +50,7 @@ const ChatInterface = ({ topic }: SearchArgs) => {
         ws.close();
       }
     };
-  }, [topic_name]);
+  }, []);
 
   if (socketRef.current !== null && socketRef.current?.readyState === WebSocket.OPEN) {
     socketRef.current.onmessage = async (event: MessageEvent) => {

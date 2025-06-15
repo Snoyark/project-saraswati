@@ -1,26 +1,22 @@
-'use client'
+import SearchPage from "./page_utils/Search";
 
-import { SUPPORTED_TOPICS } from '@/utils/constants';
-import Link from 'next/link'
-import { UnorderedHorizontalList, UnorderedVerticalList } from './page_utils/styles/List';
-
-export default function Home() {
+export default function Learn() {
   return (
-    <div>
-      <h1>Version -1.0</h1>
-      <UnorderedVerticalList>
-        <li>
-          <Link href="/">Home</Link>
-        </li>
-        <li>
-          <Link href="/about">About this project</Link>
-        </li>
-        <li>
-          <UnorderedHorizontalList>
-            <Link href={`/learn`}>{"Learn about recent papers"}</Link>
-          </UnorderedHorizontalList>
-        </li>
-      </UnorderedVerticalList>
+    <div className="min-h-screen bg-white">
+      {/* Header section */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-4xl mx-auto px-6 py-4">
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Research Search</h1>
+          <p className="text-sm text-gray-600">
+            Thank you to arXiv for use of its open access interoperability.
+          </p>
+        </div>
+      </div>
+      
+      {/* Main content */}
+      <div className="max-w-4xl mx-auto px-6 py-6">
+        <SearchPage />
+      </div>
     </div>
   );
 };
