@@ -1,6 +1,12 @@
 ## What is this?
 If you ever wanted to see a bunch of research papers in a field (say, artificial intelligence) listed for you, so you could keep up-to-date with the latest papers, AND wanted to spend less than an hour per paper, this project is for you! After setting it up, this project creates a chatbot that pulls papers from Arxiv that have been recently published and gives explanations of the paper itself. It can also dive deeper into single papers if something doesn't make sense. Ideally, it should make paper reading faster and more approachable for someone without a scientific/academic background.
 
+## Next steps
+1. Host this on some local hardware so anyone can just start interacting with it using a website.
+2. Improve the UI so it's more intuitive and professional.
+3. Allow for multiple chats per user session.
+4. Allow for history/accounts.
+
 ## Basic Local Setup
 If you're running Windows, I'd recommend using [git bash](https://gitforwindows.org), which allows Linux style commands easily. This will install `git` in general (a version control software), in addition to a shell that's essential to running the following commands.
 
