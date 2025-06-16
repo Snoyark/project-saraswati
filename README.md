@@ -1,6 +1,8 @@
 ## What is this?
 If you ever wanted to see a bunch of research papers in a field (say, artificial intelligence) listed for you, so you could keep up-to-date with the latest papers, AND wanted to spend less than an hour per paper, this project is for you! After setting it up, this project creates a chatbot that pulls papers from Arxiv that have been recently published and gives explanations of the paper itself. It can also dive deeper into single papers if something doesn't make sense. Ideally, it should make paper reading faster and more approachable for someone without a scientific/academic background.
 
+This was a problem I had, so I spent some time on this project on the side to understand RAG and Agentic workflows.
+
 ![image](https://github.com/user-attachments/assets/c9803e6f-3986-4cf2-a95b-72c52074044e)
 
 
