@@ -22,6 +22,11 @@ To run this locally, you'll need to install [npm](https://docs.npmjs.com/downloa
 npm install typescript --save-dev
 ```
 
+There might be issues with this on Mac/Linux - I would recommend using [homebrew](https://brew.sh/) and installing typescript with
+```
+brew install typescript
+```
+
 You'll also need to install [Ollama](https://ollama.com/download) for your system (which should be OS agnostic). After installing Ollama, you'll need to start running the model locally. This project uses `llama3.2` by default, but this can be changed in the `src/utils/constants.ts` file, under the variable `OLLAMA_MODEL`.
 
 Run:
