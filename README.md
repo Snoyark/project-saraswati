@@ -39,7 +39,8 @@ npm ci && tsc
 ```
 Then run these two commands in separate terminal windows:
 ```
-npm run dev
+// should be run before the server command
+npm run dev 
 
 node built/src/main/server.js
 ```
